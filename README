@@ -16,6 +16,7 @@ Requirements:
 Assumptions:
 - Planes are all parallel
 - Plane bounds are OK for now, but keep genericity in mind
+- Assume f32 (c++ double) is OK -> taken from variant_data type
 
 Plan:
 - Use nalgebra crate for linear algebra ops, maybe hide this impl detail with
