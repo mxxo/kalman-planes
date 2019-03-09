@@ -7,8 +7,16 @@ use nalgebra::{Affine3, Point3, Rotation3, Translation3, Vector2, Vector3};
 /// The bounds struct is used to distinguish Bounds types from other tuples
 #[derive(Debug, PartialEq)]
 pub struct Bounds{
-    pub x: f32,
-    pub y: f32,
+    x: f32,
+    y: f32,
+}
+
+impl Bounds {
+    pub fn new(x: f32, y: f32) -> Bounds {
+        // rough safety check for zero or negative bounds
+        assert!(x > 0.0 && y > 0.0);
+        Bounds { x, y }
+    }
 }
 
 /// The Plane data structure, somewhat analagous to PlaneSurface in ACTS
@@ -59,7 +67,7 @@ impl Plane {
 /// TODO need to think about how the transform matrix should be constructed
 
 /// xy plane has a positive z-direction normal
-fn xy_plane(bounds: Bounds) -> Plane {
+pub fn xy_plane(bounds: Bounds) -> Plane {
     Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(0.0, 0.0, 1.0),
@@ -69,7 +77,7 @@ fn xy_plane(bounds: Bounds) -> Plane {
 }
 
 /// xz plane has a positive y-direction normal
-fn xz_plane(bounds: Bounds) -> Plane {
+pub fn xz_plane(bounds: Bounds) -> Plane {
     Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(0.0, 1.0, 0.0),
@@ -79,7 +87,7 @@ fn xz_plane(bounds: Bounds) -> Plane {
 }
 
 /// yz plane has a positive x-direction normal
-fn yz_plane(bounds: Bounds) -> Plane {
+pub fn yz_plane(bounds: Bounds) -> Plane {
     Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(1.0, 0.0, 0.0),
@@ -96,12 +104,25 @@ mod tests {
     // import all names from the outer scope
     use super::*;
 
+    /// Bounds tests
+    #[test]
+    #[should_panic]
+    fn positive_bounds() {
+       Bounds::new(-1.0, 0.0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_bounds() {
+        Bounds::new(0.0, 1.0);
+    }
+
     /// Transformation tests
     #[test]
     fn reversible_translation() {
 
-        let mut p1 = xy_plane( Bounds {x: 1.0, y: 2.0 } );
-        let p2 = xy_plane( Bounds {x: 1.0, y: 2.0 } );
+        let mut p1 = xy_plane( Bounds::new(1.0, 2.0) );
+        let p2 = xy_plane( Bounds::new(1.0, 2.0) );
 
         // translate p1 there and back and test equality
         assert_eq!(p1, p2);
