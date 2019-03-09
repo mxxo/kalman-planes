@@ -7,8 +7,8 @@ use nalgebra::{Affine3, Point3, Rotation3, Translation3, Vector2, Vector3};
 /// The bounds struct is used to distinguish Bounds types from other tuples
 #[derive(Debug, PartialEq)]
 pub struct Bounds{
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Bounds {
