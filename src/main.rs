@@ -4,21 +4,21 @@ use nalgebra::{Affine3, Point3, Rotation3, Translation3, Vector2, Vector3};
 
 // add our geo module (exports nalgebra names)
 mod geo;
-use geo::Plane;
+use geo::{Bounds, Plane};
 
 fn main() {
     // test making a plane
     let mut plane1 = Plane {
         centroid: Point3::origin(),
         normal: Vector3::new(0.0, 0.0, 1.0),
-        bounds: (1.0, 2.0),
+        bounds: Bounds{ x: 1.0, y: 2.0 },
         global_to_local: Affine3::identity()
     };
 
     let plane2 = Plane {
         centroid: Point3::origin(),
         normal: Vector3::new(0.0, 0.0, 1.0),
-        bounds: (1.0, 2.0),
+        bounds: Bounds{ x: 1.0, y: 2.0 },
         global_to_local: Affine3::identity()
     };
 

@@ -4,12 +4,19 @@ use nalgebra::{Affine3, Point3, Rotation3, Translation3, Vector2, Vector3};
 /// In production, this name would have to be changed to avoid possible
 /// name clashes.
 
+/// The bounds struct is used to distinguish Bounds types from other tuples
+#[derive(Debug, PartialEq)]
+pub struct Bounds{
+    pub x: f32,
+    pub y: f32,
+}
+
 /// The Plane data structure, somewhat analagous to PlaneSurface in ACTS
 #[derive(Debug)]
 pub struct Plane {
     pub centroid: Point3<f32>, // global coords
     pub normal: Vector3<f32>,  // global coords
-    pub bounds: (f32, f32),    // plane coords
+    pub bounds: Bounds,    // plane coords
     pub global_to_local: Affine3<f32> // from the world to the plane
 }
 
@@ -27,6 +34,7 @@ impl PartialEq for Plane {
 }
 
 impl Plane {
+
     pub fn get_local_coords(&self, global_vec: &Vector3<f32>) -> Vector2<f32> {
         // broken impl for now
         Vector2::new(0.0, 0.0)
@@ -47,6 +55,40 @@ impl Plane {
     }
 }
 
+/// # Convenience constructors for planes
+/// TODO need to think about how the transform matrix should be constructed
+
+/// xy plane has a positive z-direction normal
+fn xy_plane(bounds: Bounds) -> Plane {
+    Plane {
+        centroid: Point3::new(0.0, 0.0, 0.0),
+        normal: Vector3::new(0.0, 0.0, 1.0),
+        bounds,
+        global_to_local: Affine3::identity()
+    }
+}
+
+/// xz plane has a positive y-direction normal
+fn xz_plane(bounds: Bounds) -> Plane {
+    Plane {
+        centroid: Point3::new(0.0, 0.0, 0.0),
+        normal: Vector3::new(0.0, 1.0, 0.0),
+        bounds,
+        global_to_local: Affine3::identity()
+    }
+}
+
+/// yz plane has a positive x-direction normal
+fn yz_plane(bounds: Bounds) -> Plane {
+    Plane {
+        centroid: Point3::new(0.0, 0.0, 0.0),
+        normal: Vector3::new(1.0, 0.0, 0.0),
+        bounds,
+        global_to_local: Affine3::identity()
+    }
+}
+
+
 /// Unit tests for planes
 
 #[cfg(test)]
@@ -57,19 +99,9 @@ mod tests {
     /// Transformation tests
     #[test]
     fn reversible_translation() {
-        let mut p1 = Plane {
-            centroid: Point3::new(0.0, 0.0, 0.0),
-            normal: Vector3::new(0.0, 0.0, 1.0),
-            bounds: (1.0, 2.0),
-            global_to_local: Affine3::identity()
-        };
 
-        let p2 = Plane {
-            centroid: Point3::origin(),
-            normal: Vector3::new(0.0, 0.0, 1.0),
-            bounds: (1.0, 2.0),
-            global_to_local: Affine3::identity()
-        };
+        let mut p1 = xy_plane( Bounds {x: 1.0, y: 2.0 } );
+        let p2 = xy_plane( Bounds {x: 1.0, y: 2.0 } );
 
         // translate p1 there and back and test equality
         assert_eq!(p1, p2);
@@ -88,6 +120,19 @@ mod tests {
     // test that global from local and back again gives the same vector
     #[test]
     fn reversible_coord_transform() {
+        //let mut p1 = Plane {
+        //    centroid: Point3::new(0.0, 0.0, 0.0),
+        //    normal: Vector3::new(0.0, 0.0, 1.0),
+        //    bounds: Bounds{ x: 1.0, y: 2.0 },
+        //    global_to_local: Affine3::identity()
+        //};
+
+        //let p2 = Plane {
+        //    centroid: Point3::origin(),
+        //    normal: Vector3::new(0.0, 0.0, 1.0),
+        //    bounds: Bounds{ x: 1.0, y: 2.0 },
+        //    global_to_local: Affine3::identity()
+        //};
         assert_eq!(1, 2);
     }
 }

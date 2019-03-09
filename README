@@ -3,6 +3,12 @@ that can change as work goes on.
 
 Main goal: describe 3D planes using Rust
 
+Usage notes:
+- We choose to consume transformation objects as they are applied
+- Bounds, transformations are all strongly typed
+
+----------------------------------------------------------------
+
 Requirements:
 - Data structure for planes
 - Convert from global coordinates to 2D planar coordinates
@@ -21,9 +27,10 @@ Assumptions:
 Plan:
 - Use nalgebra crate for linear algebra ops, maybe hide this impl detail with
     wrapper classes.
-
 - 3D planes -> use a struct with conversion operators
 - Take bounds logic from ACTS impl
+
+----------------------------------------------------------------
 
 Misc:
 - Think about global / local enum for coords?
