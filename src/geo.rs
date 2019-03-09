@@ -46,3 +46,48 @@ impl Plane {
         //
     }
 }
+
+/// Unit tests for planes
+
+#[cfg(test)]
+mod tests {
+    // import all names from the outer scope
+    use super::*;
+
+    /// Transformation tests
+    #[test]
+    fn reversible_translation() {
+        let mut p1 = Plane {
+            centroid: Point3::new(0.0, 0.0, 0.0),
+            normal: Vector3::new(0.0, 0.0, 1.0),
+            bounds: (1.0, 2.0),
+            global_to_local: Affine3::identity()
+        };
+
+        let p2 = Plane {
+            centroid: Point3::origin(),
+            normal: Vector3::new(0.0, 0.0, 1.0),
+            bounds: (1.0, 2.0),
+            global_to_local: Affine3::identity()
+        };
+
+        // translate p1 there and back and test equality
+        assert_eq!(p1, p2);
+
+        p1.translate(Translation3::new(1.0, 2.0, 3.0));
+        p1.translate(Translation3::new(-1.0, -2.0, -3.0));
+
+        assert_eq!(p1, p2);
+    }
+
+    #[test]
+    fn reversible_rotation() {
+        assert_eq!(1, 2);
+    }
+
+    // test that global from local and back again gives the same vector
+    #[test]
+    fn reversible_coord_transform() {
+        assert_eq!(1, 2);
+    }
+}

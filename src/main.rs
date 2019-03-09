@@ -15,6 +15,13 @@ fn main() {
         global_to_local: Affine3::identity()
     };
 
+    let plane2 = Plane {
+        centroid: Point3::origin(),
+        normal: Vector3::new(0.0, 0.0, 1.0),
+        bounds: (1.0, 2.0),
+        global_to_local: Affine3::identity()
+    };
+
     println!("plane centroid starts at: {}", plane1.centroid);
 
     // translate plane by -1 and check
