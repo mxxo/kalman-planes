@@ -1,24 +1,26 @@
-extern crate nalgebra as na;
+// helper linear algebra library
+extern crate nalgebra;
+use nalgebra::{Affine3, Point3, Rotation3, Translation3, Vector2, Vector3};
 
-use na::{Matrix4, Point3, Vector3};
-
-/// The Plane data structure, analagous to PlaneSurface in ACTS
-#[derive(Debug)]
-struct Plane {
-    centroid: Point3<f32>, // global coords
-    normal: Vector3<f32>,  // global coords
-    bounds: (f32, f32),    // plane coords
-    local_to_global: Matrix4<f32> // from the plane to the world
-}
+// add our geo module (exports nalgebra names)
+mod geo;
+use geo::Plane;
 
 fn main() {
     // test making a plane
-    let plane1 = Plane {
-        centroid: Point3::new(0.0, 0.0, 0.0),
+    let mut plane1 = Plane {
+        centroid: Point3::origin(),
         normal: Vector3::new(0.0, 0.0, 1.0),
         bounds: (1.0, 2.0),
-        local_to_global: Matrix4::identity()
+        global_to_local: Affine3::identity()
     };
 
-    println!("plane1 is {:?}", plane1);
+    println!("plane centroid starts at: {}", plane1.centroid);
+
+    // translate plane by -1 and check
+    plane1.translate(Translation3::new(-1.0, 0., 0.));
+
+    println!("plane centroid ends at: {}", plane1.centroid);
+
+    //println!("plane1 is {:?}", plane1);
 }

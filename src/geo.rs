@@ -13,6 +13,19 @@ pub struct Plane {
     pub global_to_local: Affine3<f32> // from the world to the plane
 }
 
+/// We only compare the geometry and transformation matrix
+/// of the two planes i.e. the history of how the plane
+/// got to its state doesn't matter
+
+impl PartialEq for Plane {
+    fn eq(&self, other: &Plane) -> bool {
+        self.centroid == other.centroid
+        && self.normal == other.normal
+        && self.bounds == other.bounds
+        && self.global_to_local == other.global_to_local
+    }
+}
+
 impl Plane {
     pub fn get_local_coords(&self, global_vec: &Vector3<f32>) -> Vector2<f32> {
         // broken impl for now
@@ -20,9 +33,11 @@ impl Plane {
     }
 
     /// expects translation vector in global coords
+    /// we choose to consume the translation here
     /// -> mutates the current global_to_local transform
-    pub fn translate(&mut self, translation_vec: &Translation3<f32>) {
-        //
+    pub fn translate(&mut self, translation_vec: Translation3<f32>) {
+        self.centroid = translation_vec * self.centroid;
+        self.global_to_local = translation_vec * self.global_to_local;
     }
 
     /// expects rotation matrix in global coords

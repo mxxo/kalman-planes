@@ -24,4 +24,4 @@ Plan:
 
 - 3D planes -> use a struct with conversion operators
 - Take bounds logic from ACTS impl
-
+- Think about global / local enum?
