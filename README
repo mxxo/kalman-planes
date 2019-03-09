@@ -24,4 +24,13 @@ Plan:
 
 - 3D planes -> use a struct with conversion operators
 - Take bounds logic from ACTS impl
-- Think about global / local enum?
+
+Misc:
+- Think about global / local enum for coords?
+- This implementation is kind of shaking out like a very
+    strongly typed module, making transforms very explicit.
+    This has advantages (intent) but is less flexible (e.g.
+    have to pass a Translation3 instead of Vector3 to translate.
+    This has the effect of exposing the implementation details
+    to the caller, but I think the safety and intent advantages
+    are enough to outweight this concern.
