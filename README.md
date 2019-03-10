@@ -4,7 +4,7 @@ that can change as work goes on.
 Main goal: describe 3D planes using Rust
 
 Usage notes:
-- We choose to consume transformation objects as they are applied
+- We choose to not consume transformation objects as they are applied
 - Bounds, transformations are all strongly typed
 
 ----------------------------------------------------------------
@@ -29,6 +29,7 @@ Plan:
     wrapper classes.
 - 3D planes -> use a struct with conversion operators
 - Take bounds logic from ACTS impl
+- if we have time, use serde for saving sets of useful planes for different runs
 
 ----------------------------------------------------------------
 

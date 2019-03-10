@@ -4,21 +4,21 @@ use nalgebra::{Affine3, Point3, Rotation3, Translation3, Vector2, Vector3};
 
 // add our geo module (exports nalgebra names)
 mod geo;
-use geo::{Bounds, Plane};
+use geo::{RectBounds, Plane};
 
 fn main() {
     // test making a plane
     //let mut plane1 = Plane {
     //    centroid: Point3::origin(),
     //    normal: Vector3::new(0.0, 0.0, 1.0),
-    //    bounds: Bounds{ x: 1.0, y: 2.0 },
+    //    bounds: RectBounds{ x: 1.0, y: 2.0 },
     //    global_to_local: Affine3::identity()
     //};
 
     //let plane2 = Plane {
     //    centroid: Point3::origin(),
     //    normal: Vector3::new(0.0, 0.0, 1.0),
-    //    bounds: Bounds{ x: 1.0, y: 2.0 },
+    //    bounds: RectBounds{ x: 1.0, y: 2.0 },
     //    global_to_local: Affine3::identity()
     //};
 
@@ -30,9 +30,9 @@ fn main() {
     //println!("plane centroid ends at: {}", plane1.centroid);
 
     // make three planes
-    let mut pxy = geo::xy_plane( Bounds::new(1.0, 1.0) );
-    let mut pxz = geo::xz_plane( Bounds::new(1.0, 1.0) );
-    let mut pyz = geo::yz_plane( Bounds::new(1.0, 1.0) );
+    let mut pxy = geo::xy_plane( RectBounds::new(1.0, 1.0) );
+    let mut pxz = geo::xz_plane( RectBounds::new(1.0, 1.0) );
+    let mut pyz = geo::yz_plane( RectBounds::new(1.0, 1.0) );
 
     //println!("plane1 is {:?}", plane1);
 }
