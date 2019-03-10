@@ -30,9 +30,9 @@ fn main() {
     //println!("plane centroid ends at: {}", plane1.centroid);
 
     // make three planes
-    let mut pxy = geo::xy_plane( RectBounds::new(1.0, 1.0) );
-    let mut pxz = geo::xz_plane( RectBounds::new(1.0, 1.0) );
-    let mut pyz = geo::yz_plane( RectBounds::new(1.0, 1.0) );
+    let mut pxy = geo::xy_plane( &RectBounds::new(1.0, 1.0) );
+    let mut pxz = geo::xz_plane( &RectBounds::new(1.0, 1.0) );
+    let mut pyz = geo::yz_plane( &RectBounds::new(1.0, 1.0) );
 
     //println!("plane1 is {:?}", plane1);
 }
