@@ -5,7 +5,7 @@
 
 use nalgebra::{Affine3, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
 
-// EPSILON values
+// EPSILON value for approximate floating point equality
 use std::f32;
 
 /// A basic rectangular bounds structure (in local coordinates)
@@ -26,10 +26,10 @@ impl RectBounds {
 /// The Plane data structure, somewhat analagous to PlaneSurface in ACTS
 #[derive(Debug)]
 pub struct Plane<'a> {
-    pub centroid: Point3<f32>, // global coords
-    pub normal: Vector3<f32>,  // global coords
-    pub bounds: &'a RectBounds,    // plane coords (Bounds not owned by Plane)
-    pub global_to_local: Affine3<f32> // from the world to the plane
+    centroid: Point3<f32>, // global coords
+    normal: Vector3<f32>,  // global coords
+    bounds: &'a RectBounds,    // plane coords (Bounds not owned by Plane)
+    global_to_local: Affine3<f32> // from the world to the plane
 }
 
 
