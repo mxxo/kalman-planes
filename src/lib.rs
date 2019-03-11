@@ -56,11 +56,21 @@ impl<'a> PartialEq for Plane<'a> {
 
 impl<'a> Plane<'a> {
 
+    // takes mut ref to self because
     pub fn get_local_coords(&mut self, global_point: &Point3<f32>) -> Point2<f32> {
-        //let local_point_3D = self.global_to_local * global_point;
+        let local_point_3D =
+            match self.global_to_local {
+                Some(inverse_matrix) => inverse_matrix * global_point,
+                None => {
+                    let inv = self.local_to_global.inverse();
+                    self.global_to_local = Some(inv);
+                    inv * global_point
+                }
+            };
+
         // chop off z entry
-        //local_point_3D.xy()
-        Point2::origin()
+        local_point_3D.xy()
+        //Point2::origin()
     }
 
     pub fn get_global_coords(&self, local_point : &Point2<f32>) -> Point3<f32> {
@@ -72,6 +82,8 @@ impl<'a> Plane<'a> {
     pub fn translate(mut self, translation_vec: &Translation3<f32>) -> Self {
         self.centroid = translation_vec * self.centroid;
         self.local_to_global = self.local_to_global * translation_vec;
+        // nullify current inverse matrix
+        self.global_to_local = None;
 
         self
     }
@@ -82,6 +94,8 @@ impl<'a> Plane<'a> {
         self.centroid = rotation_mat * self.centroid;
         self.normal = rotation_mat * self.normal;
         self.local_to_global = rotation_mat * self.local_to_global;
+        // nullify current inverse matrix
+        self.global_to_local = None;
 
         self
     }
@@ -172,21 +186,20 @@ mod tests {
     }
 
     #[test]
-    /// tests coordinate conversion after a translation and rotation
+    /// tests coordinate conversion after translation
     fn global_to_local() {
-        //let bounds = RectBounds::new(1.0, 1.0);
+        let bounds = RectBounds::new(1.0, 1.0);
+        let t_vec = Vector3::new(1.0, -1.0, 3.0);
 
-        //let mut pxy = xy_plane( &bounds );
-        //let translation_vec = Vector3::new(1.0, -1.0, 3.0);
-        //let global_point = Point3::from(translation_vec);
+        let mut pxy = xy_plane(&bounds)
+                      .translate(&Translation3::from(t_vec));
 
-        //pxy.translate(&Translation3::from(translation_vec));
-        //pxy.rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), Real::frac_pi_2()));
-        //// point at the origin of the plane should be at the
-        //// translation point
-        //let local_point = pxy.get_local_coords(&global_point);
-        //assert_relative_eq!(local_point, Point2::origin());
-        assert!(false);
+        let global_point = Point3::from(t_vec);
+
+        // point at the origin of the plane should be at the
+        // translation point
+        let local_point = pxy.get_local_coords(&global_point);
+        assert_relative_eq!(local_point, Point2::origin());
     }
 
     #[test]
@@ -280,6 +293,19 @@ mod tests {
     // test that global from local and back again gives the same vector
     #[test]
     fn reversible_coord_transform() {
-        assert_eq!(1, 2);
+        let bounds = RectBounds::new(3.0, 3.0);
+
+        // test with rotation, translation
+        let mut p_yz = yz_plane(&bounds)
+                    .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(),
+                            f32::consts::FRAC_PI_2))
+                    .translate(&Translation3::new(1.0, 2.0, 3.0));
+
+        let p  = Point3::new(-1.0, -2.0, -3.0);
+
+        let local_p = p_yz.get_local_coords(&p);
+
+        assert_relative_eq!(p, p_yz.get_global_coords(&local_p));
+
     }
 }
