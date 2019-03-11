@@ -4,7 +4,7 @@ extern crate approx;    // relative_eq! macros for floating point comparisons
 use nalgebra::{Affine3, Point2, Point3, Rotation3, Translation3, Vector2, Vector3};
 
 // add our geo module
-mod geo;
+extern crate geo;
 use geo::{RectBounds, Plane};
 
 fn main() {

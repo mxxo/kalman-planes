@@ -1,6 +1,7 @@
 extern crate criterion;
 use criterion::{Criterion, criterion_group, criterion_main};
 
+extern crate geo;
 // --
 
 fn bench_memoized_inverse(c: &mut Criterion) {
