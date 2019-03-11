@@ -86,6 +86,7 @@ impl<'a> Plane<'a> {
 /// TODO need to think about how the transform matrix should be constructed
 
 /// xy plane has a positive z-direction normal
+/// note: local to global transform is an identity matrix (l_x = g_x; l_y = g_y)
 pub fn xy_plane(bounds: &RectBounds) -> Plane {
     Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
@@ -97,26 +98,33 @@ pub fn xy_plane(bounds: &RectBounds) -> Plane {
 }
 
 /// xz plane has a positive y-direction normal
+/// note: reuse xy cstor and make a xz plane by
+/// rotating the xy plane about the x-axis
 pub fn xz_plane(bounds: &RectBounds) -> Plane {
-    Plane {
-        centroid: Point3::new(0.0, 0.0, 0.0),
-        normal: Vector3::new(0.0, 1.0, 0.0),
-        bounds,
-        local_to_global: Affine3::identity(),
-        global_to_local: None,
-    }
+
+    let mut pl = xy_plane(&bounds);
+    pl.rotate(
+        &Rotation3::from_axis_angle(&Vector3::x_axis(),
+        Real::frac_pi_2())
+    );
+
+    pl
 }
 
 /// yz plane has a positive x-direction normal
+/// note: reuse xy cstor and make a yz plane by
+/// rotating the xy plane about the y-axis
 pub fn yz_plane(bounds: &RectBounds) -> Plane {
-    Plane {
-        centroid: Point3::new(0.0, 0.0, 0.0),
-        normal: Vector3::new(1.0, 0.0, 0.0),
-        bounds,
-        local_to_global: Affine3::identity(),
-        global_to_local: None,
-    }
+
+    let mut pl = xy_plane(&bounds);
+    pl.rotate(
+        &Rotation3::from_axis_angle(&Vector3::y_axis(),
+        Real::frac_pi_2())
+    );
+
+    pl
 }
+
 
 
 /// Unit tests for planes
@@ -156,9 +164,6 @@ mod tests {
         let global_point = Point3::from(translation_vec);
 
         pxy.translate(&Translation3::from(translation_vec));
-        let y_axis: Unit<Vector3<f32>> = Vector3::y_axis();
-        let y_rot = Rotation3::from_axis_angle(&y_axis, Real::frac_pi_2());
-
         pxy.rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), Real::frac_pi_2()));
         // point at the origin of the plane should be at the
         // translation point
@@ -166,11 +171,15 @@ mod tests {
         assert_relative_eq!(local_point, Point2::origin());
     }
 
-    ///
-    //#[test]
-    //fn tolerance_test() {
-    //
-    //}
+    #[test]
+    fn xz_plane_coords() {
+        assert!(false);
+    }
+
+    #[test]
+    fn yz_plane_coords() {
+        assert!(false);
+    }
 
     /// Transformation tests
     #[test]
@@ -202,7 +211,6 @@ mod tests {
         // rotate the xy_plane pi/2 radians around y
         // to become identical to a xz_plane
         let y_axis: Unit<Vector3<f32>> = Vector3::y_axis();
-
         let y_rot = Rotation3::from_axis_angle(&y_axis, Real::frac_pi_2());
 
         p1.rotate(&y_rot);
