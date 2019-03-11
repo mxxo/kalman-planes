@@ -266,18 +266,14 @@ mod tests {
 
         let bounds = RectBounds::new(3.0, 3.0);
 
-        // two planes centred at the origin
-        let mut p1 = xy_plane ( &bounds );
-        let p2 = yz_plane ( &bounds );
-
         // rotate the xy_plane pi/2 radians around y
-        // to become identical to a xz_plane
-        let y_axis: Unit<Vector3<f32>> = Vector3::y_axis();
-        let y_rot = Rotation3::from_axis_angle(&y_axis, Real::frac_pi_2());
+        // and back to check reversibility in rotation
+        let mut p1 = xy_plane(&bounds)
+                     .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), f32::consts::FRAC_PI_2))
+                     .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), -1.0 * f32::consts::FRAC_PI_2));
 
-        p1 = p1.rotate(&y_rot);
-
-        // note: approx equal for floating point numbers!
+        let p2 = xy_plane (&bounds);
+        // note: uses approx equal for floating point numbers!
         assert_eq!(p1, p2);
     }
 
