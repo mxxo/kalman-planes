@@ -3,7 +3,7 @@
 /// name clashes.
 /// by Max Orok, March 2019
 
-use nalgebra::{Affine3, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
+use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
 
 // EPSILON value for approximate floating point equality
 use std::f32;
@@ -29,9 +29,11 @@ pub struct Plane<'a> {
     centroid: Point3<f32>, // global coords
     normal: Vector3<f32>,  // global coords
     bounds: &'a RectBounds,    // plane coords (Bounds not owned by Plane)
-    global_to_local: Affine3<f32> // from the world to the plane
+    global_to_local: Affine3<f32>, // from the world to the plane
+    local_to_global: Option<Affine3<f32>>, // plane to the world
+                                           // optional because it's only calculated
+                                           // when required by a local_to_global call
 }
-
 
 /// IMPORTANT: only use for debugging!
 /// The floating point rough equality checks used here may not be suitable
@@ -47,18 +49,17 @@ impl<'a> PartialEq for Plane<'a> {
         && self.normal.relative_eq(&other.normal, f32::EPSILON, f32::EPSILON)
         && self.bounds == other.bounds // no floating point check since
                                        // bounds can't be scaled in this impl
-
-        // comment out for now since it might not be use and
-        // floating point errors can mess this up
-        // && self.global_to_local == other.global_to_local
     }
 }
 
 impl<'a> Plane<'a> {
 
-    pub fn get_local_coords(&self, global_vec: &Vector3<f32>) -> Vector2<f32> {
-        // broken impl for now
-        Vector2::new(0.0, 0.0)
+    pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
+        Point2::origin()
+    }
+
+    pub fn get_global_coords(&mut self, local_point : &Point2<f32>) -> Point3<f32> {
+        Point3::origin()
     }
 
     /// expects translation vector in global coords
@@ -70,7 +71,7 @@ impl<'a> Plane<'a> {
 
     /// expects rotation matrix in global coords
     /// -> mutates the current global_to_local transform
-    pub fn rotate(&mut self, rotation_mat : &Rotation3<f32>) {
+    pub fn rotate(&mut self, rotation_mat: &Rotation3<f32>) {
         self.centroid = rotation_mat * self.centroid;
         self.normal = rotation_mat * self.normal;
         self.global_to_local = rotation_mat * self.global_to_local;
@@ -86,7 +87,8 @@ pub fn xy_plane(bounds: &RectBounds) -> Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(0.0, 0.0, 1.0),
         bounds,
-        global_to_local: Affine3::identity()
+        global_to_local: Affine3::identity(),
+        local_to_global: None
     }
 }
 
@@ -96,7 +98,8 @@ pub fn xz_plane(bounds: &RectBounds) -> Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(0.0, 1.0, 0.0),
         bounds,
-        global_to_local: Affine3::identity()
+        global_to_local: Affine3::identity(),
+        local_to_global: None,
     }
 }
 
@@ -106,7 +109,8 @@ pub fn yz_plane(bounds: &RectBounds) -> Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(1.0, 0.0, 0.0),
         bounds,
-        global_to_local: Affine3::identity()
+        global_to_local: Affine3::identity(),
+        local_to_global: None,
     }
 }
 
@@ -129,6 +133,18 @@ mod tests {
     #[should_panic]
     fn zero_bounds() {
         RectBounds::new(0.0, 1.0);
+    }
+
+    /// Local and global coordinate systems
+
+    #[test]
+    fn local_to_global() {
+        assert!(false);
+    }
+
+    #[test]
+    fn global_to_local() {
+        assert!(false);
     }
 
     ///
@@ -179,8 +195,6 @@ mod tests {
     // test that global from local and back again gives the same vector
     #[test]
     fn reversible_coord_transform() {
-
-
         assert_eq!(1, 2);
     }
 }
