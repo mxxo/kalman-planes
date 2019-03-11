@@ -98,15 +98,15 @@ pub fn xy_plane(bounds: &RectBounds) -> Plane {
     }
 }
 
-/// xz plane has a positive y-direction normal
-/// note: reuse xy cstor and make a xz plane by
-/// rotating the xy plane about the x-axis
-pub fn xz_plane(bounds: &RectBounds) -> Plane {
+/// zx plane has a positive y-direction normal
+/// note: reuse xy cstor and make a zx plane by
+/// rotating the xy plane about the x-axis by -pi / 2 radians
+pub fn zx_plane(bounds: &RectBounds) -> Plane {
 
     let mut pl = xy_plane(&bounds);
     pl.rotate(
         &Rotation3::from_axis_angle(&Vector3::x_axis(),
-        f32::consts::FRAC_PI_2)
+        -1.0 * f32::consts::FRAC_PI_2)
     );
 
     pl
@@ -186,22 +186,63 @@ mod tests {
     }
 
     #[test]
-    fn xz_plane_coords() {
-        let bounds = RectBounds::new(1.0, 1.0);
-        let pl_xz = xz_plane(&bounds);
+    fn xy_plane_coords() {
 
+        let bounds = RectBounds::new(1.0, 1.0);
+        let pl_xy = xy_plane(&bounds);
+
+        // test x-axis points
+        let globl_x = Point3::new(1.0, 0.0, 0.0);
+        let local_x = Point2::new(1.0, 0.0);
+
+        assert_relative_eq!(globl_x,
+                            pl_xy.get_global_coords(&local_x));
+
+        // test y-axis points
+        let globl_y = Point3::new(0.0, 1.0, 0.0);
+        let local_y = Point2::new(0.0, 1.0);
+
+        assert_relative_eq!(globl_y,
+                            pl_xy.get_global_coords(&local_y));
+
+        // test x and y
+        let globl_xy = Point3::new(-3.0, -3.0, 0.0);
+        let local_xy = Point2::new(-3.0, -3.0);
+
+        assert_relative_eq!(globl_xy,
+                            pl_xy.get_global_coords(&local_xy));
+    }
+
+    #[test]
+    fn zx_plane_coords() {
+        let bounds = RectBounds::new(1.0, 1.0);
+        let pl_zx = zx_plane(&bounds);
+
+        // y-points should be ignored
+//        let y_point = Point3::new(0.0, 1.0, 0.0);
+//        assert_relative_eq!(y_point,
+//                            pl_zx.get_global_coords(&Point2::new(0.0, 0.0)));
+//
+
+        // z-axis becomes local x-axis -> z point should equal local x point
+        let globl_z = Point3::new(1.0, 0.0, 1.0);
+        let local_z = Point2::new(1.0, 1.0);
+
+        assert_relative_eq!(globl_z,
+                            pl_zx.get_global_coords(&local_z));
         // on the xz plane, local x is global x, and local y is global z
         // therefore, local: (2.0, -1.0) => global: (2.0, 0.0, -1.0)
 
-        let global_point = Point3::new(2.0, 0.0, -1.0);
+        //let global_point = Point3::new(2.0, 0.0, -1.0);
 
-        assert_relative_eq!(global_point,
-                            pl_xz.get_global_coords(&Point2::new(2.0, -1.0)));
+        //assert_relative_eq!(global_point,
+        //                    pl_zx.get_global_coords(&Point2::new(2.0, -1.0)));
     }
 
     #[test]
     fn yz_plane_coords() {
         assert!(false);
+        let bounds = RectBounds::new(1.0, 1.0);
     }
 
     /// Transformation tests

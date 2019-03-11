@@ -20,25 +20,29 @@ fn main() {
     let bounds = RectBounds::new(1.0, 1.0);
 
     let mut pxy = geo::xy_plane( &bounds );
+    println!("xy is {:?}", pxy);
+    let mut pxz = geo::zx_plane( &bounds );
+    println!("xz is {:?}", pxz);
+    let mut pyz = geo::yz_plane( &bounds );
+    println!("yz is {:?}", pyz);
 
-    pxy.translate(&Translation3::new(1.0, -1.0, 3.0));
+    //pxy.translate(&Translation3::new(1.0, -1.0, 3.0));
+
+    ////let glob = Point3::new(1.0, 2.0, 3.0);
+    ////pxy.get_local_coords(&glob);
+
+    ////println!("local coords are {:?}", pxy.get_local_coords(&glob));
+    ////println!("global coords are {:?}", glob);
+
+    //let loc = Point2::origin();
+    //println!("local coords are {:?}", &loc);
+    //println!("global coords are {:?}", pxy.get_global_coords(&loc));
+
+
+    //let mut pxz = geo::xz_plane( &bounds );
+    //let mut pyz = geo::yz_plane( &bounds );
 
     //let glob = Point3::new(1.0, 2.0, 3.0);
-    //pxy.get_local_coords(&glob);
-
-    //println!("local coords are {:?}", pxy.get_local_coords(&glob));
-    //println!("global coords are {:?}", glob);
-
-    let loc = Point2::origin();
-    println!("local coords are {:?}", &loc);
-    println!("global coords are {:?}", pxy.get_global_coords(&loc));
-
-    println!("plane is {:?}", pxy);
-
-    let mut pxz = geo::xz_plane( &bounds );
-    let mut pyz = geo::yz_plane( &bounds );
-
-    let glob = Point3::new(1.0, 2.0, 3.0);
 
 
     // let plane_set = vec!(pxy, pxz, pyz);
