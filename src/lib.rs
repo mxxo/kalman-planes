@@ -1,18 +1,17 @@
+use approx::assert_relative_eq;
 /// # A detector geometry module
 /// In production, this name would have to be changed to avoid possible
 /// name clashes.
 ///
 /// by Max Orok, March 2019
-
 use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
-use approx::assert_relative_eq;
 
 // EPSILON value for approximate floating point equality
 use std::f32;
 
 /// A basic rectangular bounds structure (in local coordinates)
 #[derive(Debug, PartialEq)]
-pub struct RectBounds{
+pub struct RectBounds {
     pub x: f32,
     pub y: f32,
 }
@@ -28,13 +27,13 @@ impl RectBounds {
 /// The Plane data structure, somewhat analagous to PlaneSurface in ACTS
 #[derive(Debug)]
 pub struct Plane<'a> {
-    centroid: Point3<f32>, // global coords
-    normal: Vector3<f32>,  // global coords
-    bounds: &'a RectBounds,    // plane coords (Bounds not owned by Plane)
+    centroid: Point3<f32>,         // global coords
+    normal: Vector3<f32>,          // global coords
+    bounds: &'a RectBounds,        // plane coords (Bounds not owned by Plane)
     local_to_global: Affine3<f32>, // plane to the world
     global_to_local: Option<Affine3<f32>>, // from the world to the plane
-                                           // optional because only calculated
-                                           // when required by a local_to_global call
+                                   // optional because only calculated
+                                   // when required by a local_to_global call
 }
 
 /// IMPORTANT: only use for debugging!
@@ -48,32 +47,32 @@ pub struct Plane<'a> {
 impl<'a> PartialEq for Plane<'a> {
     fn eq(&self, other: &Plane) -> bool {
         self.centroid == other.centroid
-        && self.normal.relative_eq(&other.normal, f32::EPSILON, f32::EPSILON)
-        && self.bounds == other.bounds // no floating point check since
-                                       // bounds can't be scaled in this impl
+            && self
+                .normal
+                .relative_eq(&other.normal, f32::EPSILON, f32::EPSILON)
+            && self.bounds == other.bounds // no floating point check since
+                                           // bounds can't be scaled in this impl
     }
 }
 
 impl<'a> Plane<'a> {
-
     // takes mut ref to self because
     pub fn get_local_coords(&mut self, global_point: &Point3<f32>) -> Point2<f32> {
-        let local_point_3D =
-            match self.global_to_local {
-                Some(inverse_matrix) => inverse_matrix * global_point,
-                None => {
-                    let inv = self.local_to_global.inverse();
-                    self.global_to_local = Some(inv);
-                    inv * global_point
-                }
-            };
+        let local_point_3D = match self.global_to_local {
+            Some(inverse_matrix) => inverse_matrix * global_point,
+            None => {
+                let inv = self.local_to_global.inverse();
+                self.global_to_local = Some(inv);
+                inv * global_point
+            }
+        };
 
         // chop off z entry
         local_point_3D.xy()
         //Point2::origin()
     }
 
-    pub fn get_global_coords(&self, local_point : &Point2<f32>) -> Point3<f32> {
+    pub fn get_global_coords(&self, local_point: &Point2<f32>) -> Point3<f32> {
         self.local_to_global * Point3::new(local_point.x, local_point.y, 0.0)
     }
 
@@ -120,31 +119,31 @@ pub fn xy_plane(bounds: &RectBounds) -> Plane {
 /// note: reuse xy cstor and make a zx plane by
 /// rotating the xy plane about the x-axis by -pi / 2 radians
 pub fn zx_plane(bounds: &RectBounds) -> Plane {
-
     xy_plane(&bounds)
-        .rotate(&Rotation3::from_axis_angle(&Vector3::x_axis(),
-                -1.0 * f32::consts::FRAC_PI_2)
-               )
-        .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(),
-                -1.0 * f32::consts::FRAC_PI_2)
-               )
+        .rotate(&Rotation3::from_axis_angle(
+            &Vector3::x_axis(),
+            -1.0 * f32::consts::FRAC_PI_2,
+        ))
+        .rotate(&Rotation3::from_axis_angle(
+            &Vector3::y_axis(),
+            -1.0 * f32::consts::FRAC_PI_2,
+        ))
 }
 
 /// yz plane has a positive x-direction normal
 /// note: reuse xy cstor and make a yz plane by
 /// rotating the xy plane about the y-axis
 pub fn yz_plane(bounds: &RectBounds) -> Plane {
-
     xy_plane(&bounds)
-        .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(),
-               f32::consts::FRAC_PI_2)
-               )
-        .rotate(&Rotation3::from_axis_angle(&Vector3::x_axis(),
-               f32::consts::FRAC_PI_2)
-               )
+        .rotate(&Rotation3::from_axis_angle(
+            &Vector3::y_axis(),
+            f32::consts::FRAC_PI_2,
+        ))
+        .rotate(&Rotation3::from_axis_angle(
+            &Vector3::x_axis(),
+            f32::consts::FRAC_PI_2,
+        ))
 }
-
-
 
 /// Unit tests for planes
 
@@ -157,7 +156,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn positive_bounds() {
-       RectBounds::new(-1.0, 0.0);
+        RectBounds::new(-1.0, 0.0);
     }
 
     #[test]
@@ -170,9 +169,8 @@ mod tests {
 
     #[test]
     fn local_to_global() {
-
         let bounds = RectBounds::new(1.0, 1.0);
-        let mut pxy = xy_plane( &bounds );
+        let mut pxy = xy_plane(&bounds);
 
         let translation_vec = Vector3::new(1.0, -1.0, 3.0);
         let global_point = Point3::from(translation_vec);
@@ -191,8 +189,7 @@ mod tests {
         let bounds = RectBounds::new(1.0, 1.0);
         let t_vec = Vector3::new(1.0, -1.0, 3.0);
 
-        let mut pxy = xy_plane(&bounds)
-                      .translate(&Translation3::from(t_vec));
+        let mut pxy = xy_plane(&bounds).translate(&Translation3::from(t_vec));
 
         let global_point = Point3::from(t_vec);
 
@@ -204,7 +201,6 @@ mod tests {
 
     #[test]
     fn xy_plane_coords() {
-
         let bounds = RectBounds::new(1.0, 1.0);
         let pl_xy = xy_plane(&bounds);
 
@@ -212,22 +208,19 @@ mod tests {
         let globl_x = Point3::new(1.0, 0.0, 0.0);
         let local_x = Point2::new(1.0, 0.0);
 
-        assert_relative_eq!(globl_x,
-                            pl_xy.get_global_coords(&local_x));
+        assert_relative_eq!(globl_x, pl_xy.get_global_coords(&local_x));
 
         // test y-axis points
         let globl_y = Point3::new(0.0, 1.0, 0.0);
         let local_y = Point2::new(0.0, 1.0);
 
-        assert_relative_eq!(globl_y,
-                            pl_xy.get_global_coords(&local_y));
+        assert_relative_eq!(globl_y, pl_xy.get_global_coords(&local_y));
 
         // test x and y
         let globl_xy = Point3::new(-3.0, -3.0, 0.0);
         let local_xy = Point2::new(-3.0, -3.0);
 
-        assert_relative_eq!(globl_xy,
-                            pl_xy.get_global_coords(&local_xy));
+        assert_relative_eq!(globl_xy, pl_xy.get_global_coords(&local_xy));
     }
 
     #[test]
@@ -239,8 +232,7 @@ mod tests {
         let globl_z = Point3::new(2.0, 0.0, -1.0);
         let local_z = Point2::new(-1.0, 2.0);
 
-        assert_relative_eq!(globl_z,
-                            pl_zx.get_global_coords(&local_z));
+        assert_relative_eq!(globl_z, pl_zx.get_global_coords(&local_z));
     }
 
     #[test]
@@ -252,40 +244,44 @@ mod tests {
         let globl_y = Point3::new(0.0, 2.0, -1.0);
         let local_y = Point2::new(2.0, -1.0);
 
-        assert_relative_eq!(globl_y,
-                            pl_yz.get_global_coords(&local_y));
+        assert_relative_eq!(globl_y, pl_yz.get_global_coords(&local_y));
     }
 
     /// Transformation tests
     #[test]
     fn reversible_translation() {
-
         let bounds = RectBounds::new(1.0, 2.0);
 
-        let mut p1 = xy_plane( &bounds );
-        let p2 = xy_plane( &bounds );
+        let mut p1 = xy_plane(&bounds);
+        let p2 = xy_plane(&bounds);
 
         // translate p1 there and back and test equality
         assert_eq!(p1, p2);
 
-        p1 = p1.translate(&Translation3::new(1.0, 2.0, 3.0))
-               .translate(&Translation3::new(-1.0, -2.0, -3.0));
+        p1 = p1
+            .translate(&Translation3::new(1.0, 2.0, 3.0))
+            .translate(&Translation3::new(-1.0, -2.0, -3.0));
 
         assert_eq!(p1, p2);
     }
 
     #[test]
     fn reversible_rotation() {
-
         let bounds = RectBounds::new(3.0, 3.0);
 
         // rotate the xy_plane pi/2 radians around y
         // and back to check reversibility in rotation
         let mut p1 = xy_plane(&bounds)
-                     .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), f32::consts::FRAC_PI_2))
-                     .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), -1.0 * f32::consts::FRAC_PI_2));
+            .rotate(&Rotation3::from_axis_angle(
+                &Vector3::y_axis(),
+                f32::consts::FRAC_PI_2,
+            ))
+            .rotate(&Rotation3::from_axis_angle(
+                &Vector3::y_axis(),
+                -1.0 * f32::consts::FRAC_PI_2,
+            ));
 
-        let p2 = xy_plane (&bounds);
+        let p2 = xy_plane(&bounds);
         // note: uses approx equal for floating point numbers!
         assert_eq!(p1, p2);
     }
@@ -297,15 +293,16 @@ mod tests {
 
         // test with rotation, translation
         let mut p_yz = yz_plane(&bounds)
-                    .rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(),
-                            f32::consts::FRAC_PI_2))
-                    .translate(&Translation3::new(1.0, 2.0, 3.0));
+            .rotate(&Rotation3::from_axis_angle(
+                &Vector3::y_axis(),
+                f32::consts::FRAC_PI_2,
+            ))
+            .translate(&Translation3::new(1.0, 2.0, 3.0));
 
-        let p  = Point3::new(-1.0, -2.0, -3.0);
+        let p = Point3::new(-1.0, -2.0, -3.0);
 
         let local_p = p_yz.get_local_coords(&p);
 
         assert_relative_eq!(p, p_yz.get_global_coords(&local_p));
-
     }
 }

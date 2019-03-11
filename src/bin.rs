@@ -1,14 +1,13 @@
-extern crate nalgebra;  // helper linear algebra library
-extern crate approx;    // relative_eq! macros for floating point comparisons
+extern crate approx;
+extern crate nalgebra; // helper linear algebra library // relative_eq! macros for floating point comparisons
 
 use nalgebra::{Affine3, Point2, Point3, Rotation3, Translation3, Vector2, Vector3};
 
 // add our geo module
 extern crate geo;
-use geo::{RectBounds, Plane};
+use geo::{Plane, RectBounds};
 
 fn main() {
-
     //println!("plane centroid starts at: {}", plane1.centroid);
 
     //// translate plane by -1 and check
@@ -19,11 +18,11 @@ fn main() {
     // make three planes
     let bounds = RectBounds::new(1.0, 1.0);
 
-    let mut pxy = geo::xy_plane( &bounds );
+    let mut pxy = geo::xy_plane(&bounds);
     println!("xy is {:?}", pxy);
-    let mut pxz = geo::zx_plane( &bounds );
+    let mut pxz = geo::zx_plane(&bounds);
     println!("xz is {:?}", pxz);
-    let mut pyz = geo::yz_plane( &bounds );
+    let mut pyz = geo::yz_plane(&bounds);
     println!("yz is {:?}", pyz);
 
     //pxy.translate(&Translation3::new(1.0, -1.0, 3.0));
@@ -38,12 +37,10 @@ fn main() {
     //println!("local coords are {:?}", &loc);
     //println!("global coords are {:?}", pxy.get_global_coords(&loc));
 
-
     //let mut pxz = geo::xz_plane( &bounds );
     //let mut pyz = geo::yz_plane( &bounds );
 
     //let glob = Point3::new(1.0, 2.0, 3.0);
-
 
     // let plane_set = vec!(pxy, pxz, pyz);
 
