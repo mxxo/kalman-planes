@@ -38,6 +38,7 @@ fn main() {
     let mut pxz = geo::xz_plane( &bounds );
     let mut pyz = geo::yz_plane( &bounds );
 
+    let glob = Point3::new(1.0, 2.0, 3.0);
 
 
     // let plane_set = vec!(pxy, pxz, pyz);

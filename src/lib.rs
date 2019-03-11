@@ -1,6 +1,7 @@
 /// # A detector geometry module
 /// In production, this name would have to be changed to avoid possible
 /// name clashes.
+///
 /// by Max Orok, March 2019
 
 use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
@@ -55,14 +56,14 @@ impl<'a> PartialEq for Plane<'a> {
 
 impl<'a> Plane<'a> {
 
-    pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
+    pub fn get_local_coords(&mut self, global_point: &Point3<f32>) -> Point2<f32> {
         //let local_point_3D = self.global_to_local * global_point;
         // chop off z entry
         //local_point_3D.xy()
         Point2::origin()
     }
 
-    pub fn get_global_coords(&mut self, local_point : &Point2<f32>) -> Point3<f32> {
+    pub fn get_global_coords(&self, local_point : &Point2<f32>) -> Point3<f32> {
         self.local_to_global * Point3::new(local_point.x, local_point.y, 0.0)
     }
 
@@ -105,7 +106,7 @@ pub fn xz_plane(bounds: &RectBounds) -> Plane {
     let mut pl = xy_plane(&bounds);
     pl.rotate(
         &Rotation3::from_axis_angle(&Vector3::x_axis(),
-        Real::frac_pi_2())
+        f32::consts::FRAC_PI_2)
     );
 
     pl
@@ -151,29 +152,51 @@ mod tests {
 
     #[test]
     fn local_to_global() {
-        assert!(false);
+
+        let bounds = RectBounds::new(1.0, 1.0);
+        let mut pxy = xy_plane( &bounds );
+
+        let translation_vec = Vector3::new(1.0, -1.0, 3.0);
+        let global_point = Point3::from(translation_vec);
+
+        pxy.translate(&Translation3::from(translation_vec));
+
+        // point at the origin of the plane should be at the
+        // translation point
+        let converted_global = pxy.get_global_coords(&Point2::origin());
+        assert_relative_eq!(global_point, converted_global);
     }
 
     #[test]
     /// tests coordinate conversion after a translation and rotation
     fn global_to_local() {
-        let bounds = RectBounds::new(1.0, 1.0);
+        //let bounds = RectBounds::new(1.0, 1.0);
 
-        let mut pxy = xy_plane( &bounds );
-        let translation_vec = Vector3::new(1.0, -1.0, 3.0);
-        let global_point = Point3::from(translation_vec);
+        //let mut pxy = xy_plane( &bounds );
+        //let translation_vec = Vector3::new(1.0, -1.0, 3.0);
+        //let global_point = Point3::from(translation_vec);
 
-        pxy.translate(&Translation3::from(translation_vec));
-        pxy.rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), Real::frac_pi_2()));
-        // point at the origin of the plane should be at the
-        // translation point
-        let local_point = pxy.get_local_coords(&global_point);
-        assert_relative_eq!(local_point, Point2::origin());
+        //pxy.translate(&Translation3::from(translation_vec));
+        //pxy.rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), Real::frac_pi_2()));
+        //// point at the origin of the plane should be at the
+        //// translation point
+        //let local_point = pxy.get_local_coords(&global_point);
+        //assert_relative_eq!(local_point, Point2::origin());
+        assert!(false);
     }
 
     #[test]
     fn xz_plane_coords() {
-        assert!(false);
+        let bounds = RectBounds::new(1.0, 1.0);
+        let pl_xz = xz_plane(&bounds);
+
+        // on the xz plane, local x is global x, and local y is global z
+        // therefore, local: (2.0, -1.0) => global: (2.0, 0.0, -1.0)
+
+        let global_point = Point3::new(2.0, 0.0, -1.0);
+
+        assert_relative_eq!(global_point,
+                            pl_xz.get_global_coords(&Point2::new(2.0, -1.0)));
     }
 
     #[test]
