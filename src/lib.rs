@@ -69,17 +69,21 @@ impl<'a> Plane<'a> {
 
     /// expects translation vector in global coords
     /// -> mutates the current local_to_global transform
-    pub fn translate(&mut self, translation_vec: &Translation3<f32>) {
+    pub fn translate(mut self, translation_vec: &Translation3<f32>) -> Self {
         self.centroid = translation_vec * self.centroid;
-        self.local_to_global = self.local_to_global * translation_vec ;
+        self.local_to_global = self.local_to_global * translation_vec;
+
+        self
     }
 
     /// expects rotation matrix in global coords
     /// -> mutates the current local_to_global transform
-    pub fn rotate(&mut self, rotation_mat: &Rotation3<f32>) {
+    pub fn rotate(mut self, rotation_mat: &Rotation3<f32>) -> Self {
         self.centroid = rotation_mat * self.centroid;
         self.normal = rotation_mat * self.normal;
         self.local_to_global = rotation_mat * self.local_to_global;
+
+        self
     }
 }
 
@@ -103,13 +107,10 @@ pub fn xy_plane(bounds: &RectBounds) -> Plane {
 /// rotating the xy plane about the x-axis by -pi / 2 radians
 pub fn zx_plane(bounds: &RectBounds) -> Plane {
 
-    let mut pl = xy_plane(&bounds);
-    pl.rotate(
+    xy_plane(&bounds).rotate(
         &Rotation3::from_axis_angle(&Vector3::x_axis(),
         -1.0 * f32::consts::FRAC_PI_2)
-    );
-
-    pl
+    )
 }
 
 /// yz plane has a positive x-direction normal
@@ -117,13 +118,10 @@ pub fn zx_plane(bounds: &RectBounds) -> Plane {
 /// rotating the xy plane about the y-axis
 pub fn yz_plane(bounds: &RectBounds) -> Plane {
 
-    let mut pl = xy_plane(&bounds);
-    pl.rotate(
+    xy_plane(&bounds).rotate(
         &Rotation3::from_axis_angle(&Vector3::y_axis(),
         Real::frac_pi_2())
-    );
-
-    pl
+    )
 }
 
 
@@ -159,7 +157,7 @@ mod tests {
         let translation_vec = Vector3::new(1.0, -1.0, 3.0);
         let global_point = Point3::from(translation_vec);
 
-        pxy.translate(&Translation3::from(translation_vec));
+        pxy = pxy.translate(&Translation3::from(translation_vec));
 
         // point at the origin of the plane should be at the
         // translation point
@@ -257,8 +255,8 @@ mod tests {
         // translate p1 there and back and test equality
         assert_eq!(p1, p2);
 
-        p1.translate(&Translation3::new(1.0, 2.0, 3.0));
-        p1.translate(&Translation3::new(-1.0, -2.0, -3.0));
+        p1 = p1.translate(&Translation3::new(1.0, 2.0, 3.0))
+               .translate(&Translation3::new(-1.0, -2.0, -3.0));
 
         assert_eq!(p1, p2);
     }
@@ -277,7 +275,7 @@ mod tests {
         let y_axis: Unit<Vector3<f32>> = Vector3::y_axis();
         let y_rot = Rotation3::from_axis_angle(&y_axis, Real::frac_pi_2());
 
-        p1.rotate(&y_rot);
+        p1 = p1.rotate(&y_rot);
 
         // note: approx equal for floating point numbers!
         assert_eq!(p1, p2);
