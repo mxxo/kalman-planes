@@ -1,5 +1,5 @@
-extern crate nalgebra; // helper linear algebra library
-extern crate approx; // relative_eq! macros for floating point comparisons
+extern crate nalgebra;  // helper linear algebra library
+extern crate approx;    // relative_eq! macros for floating point comparisons
 
 use nalgebra::{Affine3, Point2, Point3, Rotation3, Translation3, Vector2, Vector3};
 
