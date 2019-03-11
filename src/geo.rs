@@ -28,7 +28,7 @@ impl RectBounds {
 pub struct Plane<'a> {
     pub centroid: Point3<f32>, // global coords
     pub normal: Vector3<f32>,  // global coords
-    pub bounds: &'a RectBounds,    // plane coords (Bounds object is owned by Plane)
+    pub bounds: &'a RectBounds,    // plane coords (Bounds not owned by Plane)
     pub global_to_local: Affine3<f32> // from the world to the plane
 }
 
@@ -62,7 +62,6 @@ impl<'a> Plane<'a> {
     }
 
     /// expects translation vector in global coords
-    /// we choose to consume the translation here
     /// -> mutates the current global_to_local transform
     pub fn translate(&mut self, translation_vec: &Translation3<f32>) {
         self.centroid = translation_vec * self.centroid;
@@ -131,6 +130,12 @@ mod tests {
     fn zero_bounds() {
         RectBounds::new(0.0, 1.0);
     }
+
+    ///
+    //#[test]
+    //fn tolerance_test() {
+    //
+    //}
 
     /// Transformation tests
     #[test]

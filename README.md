@@ -12,7 +12,7 @@ Usage notes:
 Requirements:
 - Data structure for planes
 - Convert from global coordinates to 2D planar coordinates
-- Data structurse for 2D, 3D vectors
+- Data structures for 2D, 3D vectors
 - Transformation matrices for these vectors handling translation and rotation.
   -> Note that a general transform matrix for a 3D vector is a 4x4 w/
      homogenous coordinates.
@@ -28,6 +28,7 @@ Plan:
 - Use nalgebra crate for linear algebra ops, maybe hide this impl detail with
     wrapper classes.
 - 3D planes -> use a struct with conversion operators
+- only calculate inversions when they are asked for since matrix inversion is relatively expensive (use Option type)
 - Take bounds logic from ACTS impl
 - if we have time, use serde for saving sets of useful planes for different runs
 

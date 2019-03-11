@@ -7,20 +7,6 @@ mod geo;
 use geo::{RectBounds, Plane};
 
 fn main() {
-    // test making a plane
-    //let mut plane1 = Plane {
-    //    centroid: Point3::origin(),
-    //    normal: Vector3::new(0.0, 0.0, 1.0),
-    //    bounds: RectBounds{ x: 1.0, y: 2.0 },
-    //    global_to_local: Affine3::identity()
-    //};
-
-    //let plane2 = Plane {
-    //    centroid: Point3::origin(),
-    //    normal: Vector3::new(0.0, 0.0, 1.0),
-    //    bounds: RectBounds{ x: 1.0, y: 2.0 },
-    //    global_to_local: Affine3::identity()
-    //};
 
     //println!("plane centroid starts at: {}", plane1.centroid);
 
@@ -30,9 +16,13 @@ fn main() {
     //println!("plane centroid ends at: {}", plane1.centroid);
 
     // make three planes
-    let mut pxy = geo::xy_plane( &RectBounds::new(1.0, 1.0) );
-    let mut pxz = geo::xz_plane( &RectBounds::new(1.0, 1.0) );
-    let mut pyz = geo::yz_plane( &RectBounds::new(1.0, 1.0) );
+    let bounds = RectBounds::new(1.0, 1.0);
+
+    let mut pxy = geo::xy_plane( &bounds );
+    let mut pxz = geo::xz_plane( &bounds );
+    let mut pyz = geo::yz_plane( &bounds );
+
+    let plane_set = vec!(pxy, pxz, pyz);
 
     //println!("plane1 is {:?}", plane1);
 }
