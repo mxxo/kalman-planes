@@ -4,6 +4,7 @@
 /// by Max Orok, March 2019
 
 use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
+use approx::assert_relative_eq;
 
 // EPSILON value for approximate floating point equality
 use std::f32;
@@ -29,9 +30,9 @@ pub struct Plane<'a> {
     centroid: Point3<f32>, // global coords
     normal: Vector3<f32>,  // global coords
     bounds: &'a RectBounds,    // plane coords (Bounds not owned by Plane)
-    global_to_local: Affine3<f32>, // from the world to the plane
-    local_to_global: Option<Affine3<f32>>, // plane to the world
-                                           // optional because it's only calculated
+    local_to_global: Affine3<f32>, // plane to the world
+    global_to_local: Option<Affine3<f32>>, // from the world to the plane
+                                           // optional because only calculated
                                            // when required by a local_to_global call
 }
 
@@ -55,26 +56,29 @@ impl<'a> PartialEq for Plane<'a> {
 impl<'a> Plane<'a> {
 
     pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
+        //let local_point_3D = self.global_to_local * global_point;
+        // chop off z entry
+        //local_point_3D.xy()
         Point2::origin()
     }
 
     pub fn get_global_coords(&mut self, local_point : &Point2<f32>) -> Point3<f32> {
-        Point3::origin()
+        self.local_to_global * Point3::new(local_point.x, local_point.y, 0.0)
     }
 
     /// expects translation vector in global coords
-    /// -> mutates the current global_to_local transform
+    /// -> mutates the current local_to_global transform
     pub fn translate(&mut self, translation_vec: &Translation3<f32>) {
         self.centroid = translation_vec * self.centroid;
-        self.global_to_local = translation_vec * self.global_to_local;
+        self.local_to_global = self.local_to_global * translation_vec ;
     }
 
     /// expects rotation matrix in global coords
-    /// -> mutates the current global_to_local transform
+    /// -> mutates the current local_to_global transform
     pub fn rotate(&mut self, rotation_mat: &Rotation3<f32>) {
         self.centroid = rotation_mat * self.centroid;
         self.normal = rotation_mat * self.normal;
-        self.global_to_local = rotation_mat * self.global_to_local;
+        self.local_to_global = rotation_mat * self.local_to_global;
     }
 }
 
@@ -87,8 +91,8 @@ pub fn xy_plane(bounds: &RectBounds) -> Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(0.0, 0.0, 1.0),
         bounds,
-        global_to_local: Affine3::identity(),
-        local_to_global: None
+        local_to_global: Affine3::identity(),
+        global_to_local: None,
     }
 }
 
@@ -98,8 +102,8 @@ pub fn xz_plane(bounds: &RectBounds) -> Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(0.0, 1.0, 0.0),
         bounds,
-        global_to_local: Affine3::identity(),
-        local_to_global: None,
+        local_to_global: Affine3::identity(),
+        global_to_local: None,
     }
 }
 
@@ -109,8 +113,8 @@ pub fn yz_plane(bounds: &RectBounds) -> Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
         normal: Vector3::new(1.0, 0.0, 0.0),
         bounds,
-        global_to_local: Affine3::identity(),
-        local_to_global: None,
+        local_to_global: Affine3::identity(),
+        global_to_local: None,
     }
 }
 
@@ -143,8 +147,23 @@ mod tests {
     }
 
     #[test]
+    /// tests coordinate conversion after a translation and rotation
     fn global_to_local() {
-        assert!(false);
+        let bounds = RectBounds::new(1.0, 1.0);
+
+        let mut pxy = xy_plane( &bounds );
+        let translation_vec = Vector3::new(1.0, -1.0, 3.0);
+        let global_point = Point3::from(translation_vec);
+
+        pxy.translate(&Translation3::from(translation_vec));
+        let y_axis: Unit<Vector3<f32>> = Vector3::y_axis();
+        let y_rot = Rotation3::from_axis_angle(&y_axis, Real::frac_pi_2());
+
+        pxy.rotate(&Rotation3::from_axis_angle(&Vector3::y_axis(), Real::frac_pi_2()));
+        // point at the origin of the plane should be at the
+        // translation point
+        let local_point = pxy.get_local_coords(&global_point);
+        assert_relative_eq!(local_point, Point2::origin());
     }
 
     ///
