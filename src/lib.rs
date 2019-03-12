@@ -55,6 +55,7 @@ impl PartialEq for Plane {
                 .relative_eq(&other.normal, f32::EPSILON, f32::EPSILON)
             && self.bounds == other.bounds // no floating point check since
                                            // bounds can't be scaled in this impl
+            && self.global_to_local == other.global_to_local
     }
 }
 
@@ -117,6 +118,8 @@ impl Plane {
 /// General plane constructor
 /// (adapted from PlaneSurface.cpp Copyright (C) 2016-2018 Acts project team)
 /// https://gitlab.cern.ch/acts/acts-core/blob/master/Core/src/Surfaces/PlaneSurface.cpp
+/// note: Requires RectBounds object at instantiation unlike cpp implementation
+/// for consistency -> object is never invalid this way
 
 // enforces unit rotation vector constraint on the caller
 pub fn plane_surface(
@@ -124,10 +127,9 @@ pub fn plane_surface(
     normal: Unit<Vector3<f32>>,
     bounds: RectBounds,
 ) -> Plane {
-    //let translation_vec = Translation3::from(&centroid_vec);
 
     Plane {
-        centroid: Point::from(centroid_vec),
+        centroid: Point3::origin(),
         normal,
         bounds,
         local_to_global: Affine3::identity(),
@@ -186,6 +188,7 @@ mod tests {
     use super::*;
 
     /// RectBounds tests
+
     #[test]
     #[should_panic]
     fn positive_bounds() {
@@ -255,6 +258,18 @@ mod tests {
         // translation point
         let local_point = pxy.get_local_coords(&global_point);
         assert_relative_eq!(local_point, Point2::origin());
+    }
+
+    #[test]
+    fn general_plane_constructor() {
+        let translation_vec = Vector3::new(-1.0, 2.0, -100.0);
+
+        let zx_pl = zx_plane(RectBounds::new(1.0, 1.0))
+                    .translate(&Translation3::from(translation_vec));
+
+        let gen_zx_pl = plane_surface(translation_vec, Vector3::y_axis(), RectBounds::new(1.0, 1.0));
+
+        assert_eq!(zx_pl, gen_zx_pl);
     }
 
     #[test]

@@ -8,7 +8,12 @@ extern crate geo;
 use geo::{Plane, RectBounds};
 
 fn main() {
-    //println!("plane centroid starts at: {}", plane1.centroid);
+
+    let plane1 = geo::xy_plane(RectBounds::new(1.0, 1.0));
+
+    println!("Translation demo\n-----------");
+
+   // println!("plane centroid starts at: {}", plane1.centroid);
 
     //// translate plane by -1 and check
     //plane1.translate(Translation3::new(-1.0, 0., 0.));
