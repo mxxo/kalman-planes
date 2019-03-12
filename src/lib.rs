@@ -5,11 +5,14 @@
 /// by Max Orok, March 2019
 use approx::assert_relative_eq;
 use nalgebra::{
-    Affine3, Matrix, Point, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3,
+    Affine3, Matrix, Point, Point2, Point3, Real, Rotation, Rotation3, Translation3, Unit, Vector2, Vector3,
 };
 
 // EPSILON value for approximate floating point equality
 use std::f32;
+
+// Display trait
+use std::fmt;
 
 // constant value taken from Definitions.hpp (Copyright (C) 2016-2018 Acts project team)
 // https://gitlab.cern.ch/acts/acts-core/blob/master/Core/include/Acts/Utilities/Definitions.hpp
@@ -61,6 +64,21 @@ impl PartialEq for Plane {
             && self.bounds == other.bounds // no floating point check since
                                            // bounds can't be scaled in this impl
             && self.global_to_local == other.global_to_local
+    }
+}
+
+/// Pretty printing for Planes
+impl fmt::Display for Plane {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Centroid: ({}, {}, {})\n", self.centroid.x, self.centroid.y, self.centroid.z);
+        write!(f, "Normal: ({}, {}, {})\n", self.normal.x, self.normal.y, self.normal.z);
+        write!(f, "Transform matrix: {:?}", self.global_to_local)
+        //write!(f, "Transform matrix:\n [{}, {}, {}, {}\n
+        //                                {}, {}, {}, {}\n
+        //                                {}, {}, {}, {}\n
+        //                                {}, {}, {}, {}\n",
+        //
+
     }
 }
 
@@ -132,13 +150,11 @@ pub fn plane_surface(
     normal: Unit<Vector3<f32>>,
     bounds: RectBounds,
 ) -> Plane {
-
     // comments taken from PlaneSurface.cpp
     /// the right-handed coordinate system is defined as
     /// T = normal
     /// U = Z x T if T not parallel to Z otherwise U = X x T
     /// V = T x U
-
     // unwrap from Unit
     let T = normal.into_inner();
 
@@ -153,7 +169,17 @@ pub fn plane_surface(
     let V = normal.cross(&U);
 
     // make rotation matrix from T (normal), U, V
-    let curvilinear_rotation: Rotation3<f32> = Rotation3::from_matrix(&Matrix::from_columns(&[T, U, V]));
+
+    let matrix3 = Matrix::from_columns(&[U, V, T]);
+
+    let curvilinear_rotation: Rotation3<f32> =
+        Rotation::from_matrix_unchecked(matrix3);
+
+    println!("T Vec is : {:?}\n", &T);
+    println!("U Vec is : {:?}\n", &U);
+    println!("V Vec is : {:?}\n", &V);
+    println!("Matrix3 is : {:?}\n", &matrix3);
+    println!("rotation matrix: {:?}\n", curvilinear_rotation);
 
     Plane {
         centroid: Point3::origin(),
@@ -162,8 +188,8 @@ pub fn plane_surface(
         local_to_global: Affine3::identity(),
         global_to_local: Affine3::identity(),
     }
-    .translate(&Translation3::from(centroid_vec))
     .rotate(&curvilinear_rotation)
+    .translate(&Translation3::from(centroid_vec))
 }
 
 /// # Convenience constructors for planes
@@ -292,10 +318,17 @@ mod tests {
     fn general_plane_constructor() {
         let translation_vec = Vector3::new(-1.0, 2.0, -100.0);
 
-        let zx_pl = zx_plane(RectBounds::new(1.0, 1.0))
-                    .translate(&Translation3::from(translation_vec));
+        let zx_pl =
+            zx_plane(RectBounds::new(1.0, 1.0)).translate(&Translation3::from(translation_vec));
 
-        let gen_zx_pl = plane_surface(translation_vec, Vector3::y_axis(), RectBounds::new(1.0, 1.0));
+        let gen_zx_pl = plane_surface(
+            translation_vec,
+            Vector3::y_axis(),
+            RectBounds::new(1.0, 1.0),
+        );
+
+        println!("zx_plane: {}\n", &zx_pl);
+        println!("gen_zx_plane: {}\n", &gen_zx_pl);
 
         assert_eq!(zx_pl, gen_zx_pl);
     }
