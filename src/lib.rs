@@ -57,18 +57,18 @@ impl PartialEq for Plane {
 }
 
 impl Plane {
-    /// Given a local plane coordinate, check if in RectBounds
-    /// using per-direction tolerances
-    pub fn in_bounds_tolerance(&self, local_point: &Point2<f32>, tol_x: f32, tol_y: f32) -> bool {
-         local_point.x > -1.0 * self.bounds.half_x
-         && local_point.x < self.bounds.half_x
-         && local_point.y > -1.0 * self.bounds.half_y
-         && local_point.y < self.bounds.half_y
-    }
+    ///// Given a local plane coordinate, check if in RectBounds
+    ///// using per-direction tolerances
+    //pub fn in_bounds_tolerance(&self, local_point: &Point2<f32>, tol_x: f32, tol_y: f32) -> bool {
+    //    false
+    //}
 
-    /// more specific form of in_bounds_tolerance that uses floating point epsilson
+    /// specific form of in_bounds_tolerance
     pub fn in_bounds(&self, local_point: &Point2<f32>) -> bool {
-        self.in_bounds_tolerance(local_point, f32::EPSILON, f32::EPSILON)
+        local_point.x >= -1.0 * self.bounds.half_x
+        && local_point.x <= self.bounds.half_x
+        && local_point.y >= -1.0 * self.bounds.half_y
+        && local_point.y <= self.bounds.half_y
     }
 
     // uses a stored matrix inverse for efficiency
@@ -174,7 +174,32 @@ mod tests {
         RectBounds::new(0.0, 1.0);
     }
 
+    #[test]
+    fn rect_bounds_check() {
+        // bounds extend from -1 to 1 for both directions in local coords
+        let pl = zx_plane(RectBounds::new(1.0, 1.0));
 
+        let boundary_point = Point2::new(1.0, 1.0);
+        let origin = Point2::origin();
+        let left_upper = Point2::new(-0.99, 0.75);
+        let left_lower = Point2::new(-0.99, -0.99);
+        let right_lower = Point2::new(0.5, -0.2);
+        let right_upper = Point2::new(0.1, 0.33);
+
+        // inside checks
+        assert!(pl.in_bounds(&boundary_point));
+        assert!(pl.in_bounds(&origin));
+        assert!(pl.in_bounds(&left_upper));
+        assert!(pl.in_bounds(&left_lower));
+        assert!(pl.in_bounds(&right_lower));
+        assert!(pl.in_bounds(&right_upper));
+
+        // outside checks
+        assert!(! pl.in_bounds(&Point2::new(1.01, 0.0)));
+        assert!(! pl.in_bounds(&Point2::new(1.0, 1.01)));
+        assert!(! pl.in_bounds(&Point2::new(-1.01, 0.0)));
+        assert!(! pl.in_bounds(&Point2::new(0.0, -1.01)));
+    }
 
     /// Local and global coordinate systems
 
