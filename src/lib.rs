@@ -3,8 +3,9 @@
 /// name clashes.
 ///
 /// by Max Orok, March 2019
+
 use approx::assert_relative_eq;
-use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
+use nalgebra::{Affine3, Point, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
 
 // EPSILON value for approximate floating point equality
 use std::f32;
@@ -29,7 +30,7 @@ impl RectBounds {
 #[derive(Copy, Clone, Debug)]
 pub struct Plane {
     centroid: Point3<f32>,         // global coords
-    normal: Vector3<f32>,          // global coords
+    normal: Unit<Vector3<f32>>,          // global coords (must be a unit vector)
     bounds: RectBounds,            // plane coords (owned by Plane)
     local_to_global: Affine3<f32>, // plane to the world
     global_to_local: Affine3<f32>, // from the world to the plane
@@ -112,6 +113,25 @@ impl Plane {
     }
 }
 
+/// General plane constructor
+/// (adapted from PlaneSurface.cpp Copyright (C) 2016-2018 Acts project team)
+/// https://gitlab.cern.ch/acts/acts-core/blob/master/Core/src/Surfaces/PlaneSurface.cpp
+
+// enforces unit rotation vector constraint on the caller
+pub fn plane_surface(centroid_vec: Vector3<f32>, normal: Unit<Vector3<f32>>, bounds: RectBounds) -> Plane {
+
+    //let translation_vec = Translation3::from(&centroid_vec);
+
+    Plane {
+        centroid: Point::from(centroid_vec),
+        normal,
+        bounds,
+        local_to_global: Affine3::identity(),
+        global_to_local: Affine3::identity(),
+    }.translate(&Translation3::from(centroid_vec))
+
+}
+
 /// # Convenience constructors for planes
 
 /// xy plane has a positive z-direction normal
@@ -119,7 +139,7 @@ impl Plane {
 pub fn xy_plane(bounds: RectBounds) -> Plane {
     Plane {
         centroid: Point3::new(0.0, 0.0, 0.0),
-        normal: Vector3::new(0.0, 0.0, 1.0),
+        normal: Vector3::z_axis(),
         bounds,
         local_to_global: Affine3::identity(),
         global_to_local: Affine3::identity(),
