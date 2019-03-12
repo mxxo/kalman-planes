@@ -5,11 +5,16 @@
 /// by Max Orok, March 2019
 use approx::assert_relative_eq;
 use nalgebra::{
-    Affine3, Point, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3,
+    Affine3, Matrix, Point, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3,
 };
 
 // EPSILON value for approximate floating point equality
 use std::f32;
+
+// constant value taken from Definitions.hpp (Copyright (C) 2016-2018 Acts project team)
+// https://gitlab.cern.ch/acts/acts-core/blob/master/Core/include/Acts/Utilities/Definitions.hpp
+// used for general plane cstor `plane_surface`
+const s_curvilinearProjTolerance: f32 = 0.999995;
 
 /// A basic rectangular bounds structure (in local coordinates)
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -128,6 +133,28 @@ pub fn plane_surface(
     bounds: RectBounds,
 ) -> Plane {
 
+    // comments taken from PlaneSurface.cpp
+    /// the right-handed coordinate system is defined as
+    /// T = normal
+    /// U = Z x T if T not parallel to Z otherwise U = X x T
+    /// V = T x U
+
+    // unwrap from Unit
+    let T = normal.into_inner();
+
+    let U = if Real::abs(normal.dot(&Vector3::z_axis())) < s_curvilinearProjTolerance {
+        Vector3::z_axis().cross(&normal).normalize()
+    } else {
+        Vector3::x_axis().cross(&normal).normalize()
+    };
+
+    // TODO check if no normalization step needed here?
+    // might be that normal cross product components ensure the result is normalized
+    let V = normal.cross(&U);
+
+    // make rotation matrix from T (normal), U, V
+    let curvilinear_rotation: Rotation3<f32> = Rotation3::from_matrix(&Matrix::from_columns(&[T, U, V]));
+
     Plane {
         centroid: Point3::origin(),
         normal,
@@ -136,6 +163,7 @@ pub fn plane_surface(
         global_to_local: Affine3::identity(),
     }
     .translate(&Translation3::from(centroid_vec))
+    .rotate(&curvilinear_rotation)
 }
 
 /// # Convenience constructors for planes
