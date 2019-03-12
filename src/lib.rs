@@ -32,7 +32,8 @@ pub struct Plane {
     bounds: RectBounds,            // plane coords (owned by Plane)
     local_to_global: Affine3<f32>, // plane to the world
     global_to_local: Affine3<f32>, // from the world to the plane
-                                   // more expensive than local_to_global
+                                   //   inverse of local_to_global
+                                   //   so more expensive to find
 }
 
 /// IMPORTANT: only use for debugging!
@@ -55,22 +56,15 @@ impl PartialEq for Plane {
 }
 
 impl Plane {
-    // takes mut ref to self because
-    pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
-        //let local_point_3D = match self.global_to_local {
-        //    Some(inverse_matrix) => inverse_matrix * global_point,
-        //    None => {
-        //        let inv = self.local_to_global.inverse();
-        //        self.global_to_local = Some(inv);
-        //        inv * global_point
-        //    }
-        //};
-        let local_point3D = self.global_to_local * global_point;
 
+    // uses a stored matrix inverse for efficiency
+    pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
+        let local_point3D = self.global_to_local * global_point;
         // chop off z entry
         local_point3D.xy()
     }
 
+    // evaluates the matrix inverse each time
     pub fn get_local_coords_eager(&self, global_point: &Point3<f32>) -> Point2<f32> {
         let local_point_3D = self.local_to_global.inverse() * global_point;
         local_point_3D.xy()
