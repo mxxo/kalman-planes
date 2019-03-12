@@ -10,22 +10,23 @@ use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vec
 use std::f32;
 
 /// A basic rectangular bounds structure (in local coordinates)
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct RectBounds {
-    pub x: f32,
-    pub y: f32,
+    pub half_x: f32,
+    pub half_y: f32,
 }
 
 impl RectBounds {
-    pub fn new(x: f32, y: f32) -> RectBounds {
+    /// Takes half bounds distance for each direction
+    pub fn new(half_x: f32, half_y: f32) -> RectBounds {
         // rough sanity check for zero or negative bounds
-        assert!(x > 0.0 && y > 0.0);
-        RectBounds { x, y }
+        assert!(half_x > 0.0 && half_y > 0.0);
+        RectBounds { half_x, half_y }
     }
 }
 
 /// The Plane data structure, somewhat analagous to PlaneSurface in ACTS
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Plane {
     centroid: Point3<f32>,         // global coords
     normal: Vector3<f32>,          // global coords
@@ -56,6 +57,19 @@ impl PartialEq for Plane {
 }
 
 impl Plane {
+    /// Given a local plane coordinate, check if in RectBounds
+    /// using per-direction tolerances
+    pub fn in_bounds_tolerance(&self, local_point: &Point2<f32>, tol_x: f32, tol_y: f32) -> bool {
+         local_point.x > -1.0 * self.bounds.half_x
+         && local_point.x < self.bounds.half_x
+         && local_point.y > -1.0 * self.bounds.half_y
+         && local_point.y < self.bounds.half_y
+    }
+
+    /// more specific form of in_bounds_tolerance that uses floating point epsilson
+    pub fn in_bounds(&self, local_point: &Point2<f32>) -> bool {
+        self.in_bounds_tolerance(local_point, f32::EPSILON, f32::EPSILON)
+    }
 
     // uses a stored matrix inverse for efficiency
     pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
@@ -91,7 +105,7 @@ impl Plane {
         self.centroid = rotation_mat * self.centroid;
         self.normal = rotation_mat * self.normal;
         self.local_to_global = rotation_mat * self.local_to_global;
-        // nullify current inverse matrix
+        // update current inverse matrix
         self.global_to_local = self.local_to_global.inverse();
 
         self
@@ -99,7 +113,6 @@ impl Plane {
 }
 
 /// # Convenience constructors for planes
-/// TODO need to think about how the transform matrix should be constructed
 
 /// xy plane has a positive z-direction normal
 /// note: local to global transform is an identity matrix (l_x = g_x; l_y = g_y)
@@ -114,8 +127,7 @@ pub fn xy_plane(bounds: RectBounds) -> Plane {
 }
 
 /// zx plane has a positive y-direction normal
-/// note: reuse xy cstor and make a zx plane by
-/// rotating the xy plane about the x-axis by -pi / 2 radians
+/// note: reuse xy cstor and make a zx plane by rotation
 pub fn zx_plane(bounds: RectBounds) -> Plane {
     xy_plane(bounds)
         .rotate(&Rotation3::from_axis_angle(
@@ -129,8 +141,7 @@ pub fn zx_plane(bounds: RectBounds) -> Plane {
 }
 
 /// yz plane has a positive x-direction normal
-/// note: reuse xy cstor and make a yz plane by
-/// rotating the xy plane about the y-axis
+/// note: reuse xy cstor and make a yz plane by rotation
 pub fn yz_plane(bounds: RectBounds) -> Plane {
     xy_plane(bounds)
         .rotate(&Rotation3::from_axis_angle(
@@ -162,6 +173,8 @@ mod tests {
     fn zero_bounds() {
         RectBounds::new(0.0, 1.0);
     }
+
+
 
     /// Local and global coordinate systems
 
@@ -291,6 +304,13 @@ mod tests {
         let local_p = p_yz.get_local_coords(&p);
 
         assert_relative_eq!(p, p_yz.get_global_coords(&local_p));
+    }
+
+    #[test]
+    fn copy_plane() {
+        let p1 = xy_plane(RectBounds::new(3.0, 3.0));
+        let p2 = p1;
+        assert_eq!(p1, p2);
     }
 
     #[test]
