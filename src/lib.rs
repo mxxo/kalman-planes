@@ -1,9 +1,10 @@
-use approx::assert_relative_eq;
 /// # A detector geometry module
 /// In production, this name would have to be changed to avoid possible
 /// name clashes.
 ///
 /// by Max Orok, March 2019
+
+use approx::assert_relative_eq;
 use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
 
 // EPSILON value for approximate floating point equality
@@ -69,7 +70,11 @@ impl<'a> Plane<'a> {
 
         // chop off z entry
         local_point_3D.xy()
-        //Point2::origin()
+    }
+
+    pub fn get_local_coords_eager(&self, global_point: &Point3<f32>) -> Point2<f32> {
+        let local_point_3D = self.local_to_global.inverse() * global_point;
+        local_point_3D.xy()
     }
 
     pub fn get_global_coords(&self, local_point: &Point2<f32>) -> Point3<f32> {
@@ -304,5 +309,26 @@ mod tests {
         let local_p = p_yz.get_local_coords(&p);
 
         assert_relative_eq!(p, p_yz.get_global_coords(&local_p));
+    }
+
+    #[test]
+    fn inverse_eager () {
+        let bounds = RectBounds::new(3.0, 3.0);
+
+        // test with rotation, translation
+        let mut p_yz = yz_plane(&bounds)
+            .rotate(&Rotation3::from_axis_angle(
+                &Vector3::y_axis(),
+                f32::consts::FRAC_PI_2,
+            ))
+            .translate(&Translation3::new(1.0, 2.0, 3.0));
+
+        let p = Point3::new(-1.0, -2.0, -3.0);
+
+        let p_optional = p_yz.get_local_coords(&p);
+        let p_eager = p_yz.get_local_coords_eager(&p);
+
+        assert_relative_eq!(p_optional, p_eager);
+
     }
 }
