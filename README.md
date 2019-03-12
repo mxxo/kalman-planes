@@ -5,6 +5,7 @@ Main goal: describe 3D planes using Rust
 
 Usage notes:
 - We choose to not consume transformation objects as they are applied
+- However, Bounds objects are owned by their associated Plane 
 - Bounds, transformations are all strongly typed
 
 ----------------------------------------------------------------

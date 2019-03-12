@@ -16,13 +16,11 @@ fn main() {
     //println!("plane centroid ends at: {}", plane1.centroid);
 
     // make three planes
-    let bounds = RectBounds::new(1.0, 1.0);
-
-    let mut pxy = geo::xy_plane(&bounds);
+    let mut pxy = geo::xy_plane(RectBounds::new(1.0, 1.0));
     println!("xy is {:?}", pxy);
-    let mut pxz = geo::zx_plane(&bounds);
+    let mut pxz = geo::zx_plane(RectBounds::new(1.0, 1.0));
     println!("xz is {:?}", pxz);
-    let mut pyz = geo::yz_plane(&bounds);
+    let mut pyz = geo::yz_plane(RectBounds::new(1.0, 1.0));
     println!("yz is {:?}", pyz);
 
     //pxy.translate(&Translation3::new(1.0, -1.0, 3.0));
