@@ -31,9 +31,8 @@ pub struct Plane {
     normal: Vector3<f32>,          // global coords
     bounds: RectBounds,            // plane coords (owned by Plane)
     local_to_global: Affine3<f32>, // plane to the world
-    global_to_local: Option<Affine3<f32>>, // from the world to the plane
-                                   // optional because only calculated
-                                   // when required by a local_to_global call
+    global_to_local: Affine3<f32>, // from the world to the plane
+                                   // more expensive than local_to_global
 }
 
 /// IMPORTANT: only use for debugging!
@@ -57,18 +56,19 @@ impl PartialEq for Plane {
 
 impl Plane {
     // takes mut ref to self because
-    pub fn get_local_coords(&mut self, global_point: &Point3<f32>) -> Point2<f32> {
-        let local_point_3D = match self.global_to_local {
-            Some(inverse_matrix) => inverse_matrix * global_point,
-            None => {
-                let inv = self.local_to_global.inverse();
-                self.global_to_local = Some(inv);
-                inv * global_point
-            }
-        };
+    pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
+        //let local_point_3D = match self.global_to_local {
+        //    Some(inverse_matrix) => inverse_matrix * global_point,
+        //    None => {
+        //        let inv = self.local_to_global.inverse();
+        //        self.global_to_local = Some(inv);
+        //        inv * global_point
+        //    }
+        //};
+        let local_point3D = self.global_to_local * global_point;
 
         // chop off z entry
-        local_point_3D.xy()
+        local_point3D.xy()
     }
 
     pub fn get_local_coords_eager(&self, global_point: &Point3<f32>) -> Point2<f32> {
@@ -85,8 +85,8 @@ impl Plane {
     pub fn translate(mut self, translation_vec: &Translation3<f32>) -> Self {
         self.centroid = translation_vec * self.centroid;
         self.local_to_global = self.local_to_global * translation_vec;
-        // nullify current inverse matrix
-        self.global_to_local = None;
+        // update current inverse matrix
+        self.global_to_local = self.local_to_global.inverse();
 
         self
     }
@@ -98,7 +98,7 @@ impl Plane {
         self.normal = rotation_mat * self.normal;
         self.local_to_global = rotation_mat * self.local_to_global;
         // nullify current inverse matrix
-        self.global_to_local = None;
+        self.global_to_local = self.local_to_global.inverse();
 
         self
     }
@@ -115,7 +115,7 @@ pub fn xy_plane(bounds: RectBounds) -> Plane {
         normal: Vector3::new(0.0, 0.0, 1.0),
         bounds,
         local_to_global: Affine3::identity(),
-        global_to_local: None,
+        global_to_local: Affine3::identity(),
     }
 }
 

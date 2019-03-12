@@ -6,9 +6,9 @@ use nalgebra::{Point2, Point3, Rotation3, Translation3, Vector3};
 
 // --
 
-fn bench_memoized_inverse(c: &mut Criterion) {
-    let mut pl = dummy_zx_plane();
-    c.bench_function("memoized inverse", move |b| {
+fn bench_stored_inverse(c: &mut Criterion) {
+    let pl = dummy_zx_plane();
+    c.bench_function("stored inverse", move |b| {
         b.iter(|| pl.get_local_coords(&Point3::new(1002.0, -23.0, 282.)))
     });
 }
@@ -48,7 +48,7 @@ fn bench_make_zx_plane(c: &mut Criterion) {
 
 criterion_group!(
     benches,
-    bench_memoized_inverse,
+    bench_stored_inverse,
     bench_eager_inverse,
     bench_make_xy_plane,
     bench_make_zx_plane,
