@@ -3,7 +3,6 @@
 /// name clashes.
 ///
 /// by Max Orok, March 2019
-
 use approx::assert_relative_eq;
 use nalgebra::{Affine3, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
 
@@ -250,7 +249,6 @@ mod tests {
     /// Transformation tests
     #[test]
     fn reversible_translation() {
-
         let mut p1 = xy_plane(RectBounds::new(1.0, 2.0));
         let p2 = xy_plane(RectBounds::new(1.0, 2.0));
 
@@ -266,7 +264,6 @@ mod tests {
 
     #[test]
     fn reversible_rotation() {
-
         // rotate the xy_plane pi/2 radians around y
         // and back to check reversibility in rotation
         let mut p1 = xy_plane(RectBounds::new(3.0, 3.0))
@@ -287,7 +284,6 @@ mod tests {
     // test that global from local and back again gives the same vector
     #[test]
     fn reversible_coord_transform() {
-
         // test with rotation, translation
         let mut p_yz = yz_plane(RectBounds::new(3.0, 3.0))
             .rotate(&Rotation3::from_axis_angle(
@@ -304,8 +300,7 @@ mod tests {
     }
 
     #[test]
-    fn inverse_eager () {
-
+    fn inverse_eager() {
         // test with rotation, translation
         let mut p_yz = yz_plane(RectBounds::new(3.0, 3.0))
             .rotate(&Rotation3::from_axis_angle(
