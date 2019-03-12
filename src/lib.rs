@@ -3,9 +3,10 @@
 /// name clashes.
 ///
 /// by Max Orok, March 2019
-
 use approx::assert_relative_eq;
-use nalgebra::{Affine3, Point, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3};
+use nalgebra::{
+    Affine3, Point, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector2, Vector3,
+};
 
 // EPSILON value for approximate floating point equality
 use std::f32;
@@ -30,7 +31,7 @@ impl RectBounds {
 #[derive(Copy, Clone, Debug)]
 pub struct Plane {
     centroid: Point3<f32>,         // global coords
-    normal: Unit<Vector3<f32>>,          // global coords (must be a unit vector)
+    normal: Unit<Vector3<f32>>,    // global coords (must be a unit vector)
     bounds: RectBounds,            // plane coords (owned by Plane)
     local_to_global: Affine3<f32>, // plane to the world
     global_to_local: Affine3<f32>, // from the world to the plane
@@ -67,9 +68,9 @@ impl Plane {
     /// specific form of in_bounds_tolerance
     pub fn in_bounds(&self, local_point: &Point2<f32>) -> bool {
         local_point.x >= -1.0 * self.bounds.half_x
-        && local_point.x <= self.bounds.half_x
-        && local_point.y >= -1.0 * self.bounds.half_y
-        && local_point.y <= self.bounds.half_y
+            && local_point.x <= self.bounds.half_x
+            && local_point.y >= -1.0 * self.bounds.half_y
+            && local_point.y <= self.bounds.half_y
     }
 
     // uses a stored matrix inverse for efficiency
@@ -118,8 +119,11 @@ impl Plane {
 /// https://gitlab.cern.ch/acts/acts-core/blob/master/Core/src/Surfaces/PlaneSurface.cpp
 
 // enforces unit rotation vector constraint on the caller
-pub fn plane_surface(centroid_vec: Vector3<f32>, normal: Unit<Vector3<f32>>, bounds: RectBounds) -> Plane {
-
+pub fn plane_surface(
+    centroid_vec: Vector3<f32>,
+    normal: Unit<Vector3<f32>>,
+    bounds: RectBounds,
+) -> Plane {
     //let translation_vec = Translation3::from(&centroid_vec);
 
     Plane {
@@ -128,8 +132,8 @@ pub fn plane_surface(centroid_vec: Vector3<f32>, normal: Unit<Vector3<f32>>, bou
         bounds,
         local_to_global: Affine3::identity(),
         global_to_local: Affine3::identity(),
-    }.translate(&Translation3::from(centroid_vec))
-
+    }
+    .translate(&Translation3::from(centroid_vec))
 }
 
 /// # Convenience constructors for planes
@@ -215,10 +219,10 @@ mod tests {
         assert!(pl.in_bounds(&right_upper));
 
         // outside checks
-        assert!(! pl.in_bounds(&Point2::new(1.01, 0.0)));
-        assert!(! pl.in_bounds(&Point2::new(1.0, 1.01)));
-        assert!(! pl.in_bounds(&Point2::new(-1.01, 0.0)));
-        assert!(! pl.in_bounds(&Point2::new(0.0, -1.01)));
+        assert!(!pl.in_bounds(&Point2::new(1.01, 0.0)));
+        assert!(!pl.in_bounds(&Point2::new(1.0, 1.01)));
+        assert!(!pl.in_bounds(&Point2::new(-1.01, 0.0)));
+        assert!(!pl.in_bounds(&Point2::new(0.0, -1.01)));
     }
 
     /// Local and global coordinate systems
