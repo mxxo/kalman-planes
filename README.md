@@ -8,6 +8,10 @@ Usage notes:
 - However, Bounds objects are owned by their associated Plane 
 - Bounds, transformations are all strongly typed
 
+Todo: 
+    clean this doc up for github 
+    make src/bin.rs into a showcase of the api 
+
 ----------------------------------------------------------------
 
 Requirements:
