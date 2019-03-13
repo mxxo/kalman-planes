@@ -63,6 +63,7 @@ impl PartialEq for Plane {
                 .relative_eq(&other.normal, f32::EPSILON, f32::EPSILON)
             && self.bounds == other.bounds // no floating point check since
                                            // bounds can't be scaled in this impl
+           // don't compare transform matrices -> only compare their results
            // && self.global_to_local == other.global_to_local
     }
 }
@@ -73,12 +74,6 @@ impl fmt::Display for Plane {
         write!(f, "Centroid: ({}, {}, {})\n", self.centroid.x, self.centroid.y, self.centroid.z);
         write!(f, "Normal: ({}, {}, {})\n", self.normal.x, self.normal.y, self.normal.z);
         write!(f, "Transform matrix: {:?}", self.global_to_local)
-        //write!(f, "Transform matrix:\n [{}, {}, {}, {}\n
-        //                                {}, {}, {}, {}\n
-        //                                {}, {}, {}, {}\n
-        //                                {}, {}, {}, {}\n",
-        //
-
     }
 }
 
@@ -157,6 +152,7 @@ pub fn plane_surface(
     /// U = Z x T if T not parallel to Z otherwise U = X x T
     /// V = T x U
     // unwrap from Unit
+
     let T = normal.into_inner();
 
     let U = if Real::abs(normal.dot(&Vector3::z_axis())) < s_curvilinearProjTolerance {
@@ -199,41 +195,31 @@ pub fn plane_surface(
 /// xy plane has a positive z-direction normal
 /// note: local to global transform is an identity matrix (l_x = g_x; l_y = g_y)
 pub fn xy_plane(bounds: RectBounds) -> Plane {
-    Plane {
-        centroid: Point3::new(0.0, 0.0, 0.0),
-        normal: Vector3::z_axis(),
+    plane_surface(
+        Vector3::new(0.0, 0.0, 0.0),
+        Vector3::z_axis(),
         bounds,
-        local_to_global: Affine3::identity(),
-        global_to_local: Affine3::identity(),
-    }
+    )
 }
 
 /// zx plane has a positive y-direction normal
 /// note: reuse xy cstor and make a zx plane by rotation
 pub fn zx_plane(bounds: RectBounds) -> Plane {
-    xy_plane(bounds)
-        .rotate(&Rotation3::from_axis_angle(
-            &Vector3::x_axis(),
-            -1.0 * f32::consts::FRAC_PI_2,
-        ))
-        .rotate(&Rotation3::from_axis_angle(
-            &Vector3::y_axis(),
-            -1.0 * f32::consts::FRAC_PI_2,
-        ))
+    plane_surface(
+        Vector3::new(0.0, 0.0, 0.0),
+        Vector3::y_axis(),
+        bounds,
+    )
 }
 
 /// yz plane has a positive x-direction normal
 /// note: reuse xy cstor and make a yz plane by rotation
 pub fn yz_plane(bounds: RectBounds) -> Plane {
-    xy_plane(bounds)
-        .rotate(&Rotation3::from_axis_angle(
-            &Vector3::y_axis(),
-            f32::consts::FRAC_PI_2,
-        ))
-        .rotate(&Rotation3::from_axis_angle(
-            &Vector3::x_axis(),
-            f32::consts::FRAC_PI_2,
-        ))
+    plane_surface(
+        Vector3::new(0.0, 0.0, 0.0),
+        Vector3::x_axis(),
+        bounds,
+    )
 }
 
 /// Unit tests for planes
@@ -321,20 +307,20 @@ mod tests {
         let translation_vec = Vector3::new(-1.0, 2.0, -100.0);
 
         // xy
-        //let xy_pl =
-        //    xy_plane(RectBounds::new(1.0, 1.0)).translate(&Translation3::from(translation_vec));
+        let xy_pl =
+            xy_plane(RectBounds::new(1.0, 1.0)).translate(&Translation3::from(translation_vec));
 
-        //let gen_xy_pl = plane_surface(
-        //    translation_vec,
-        //    Vector3::z_axis(),
-        //    RectBounds::new(1.0, 1.0),
-        //);
+        let gen_xy_pl = plane_surface(
+            translation_vec,
+            Vector3::z_axis(),
+            RectBounds::new(1.0, 1.0),
+        );
 
-        //assert_eq!(xy_pl, gen_xy_pl);
+        assert_eq!(xy_pl, gen_xy_pl);
 
-        //// check if converted points are the same
-        //assert_eq!(xy_pl.get_global_coords(&Point2::origin()),
-        //           gen_xy_pl.get_global_coords(&Point2::origin()));
+        // check if converted points are the same
+        assert_eq!(xy_pl.get_global_coords(&Point2::origin()),
+                   gen_xy_pl.get_global_coords(&Point2::origin()));
 
         // --
 
@@ -347,9 +333,6 @@ mod tests {
             Vector3::y_axis(),
             RectBounds::new(1.0, 1.0),
         );
-
-        //println!("zx_plane: {}\n", &zx_pl);
-        //println!("gen_zx_plane: {}\n", &gen_zx_pl);
 
         assert_eq!(zx_pl, gen_zx_pl);
 
@@ -451,21 +434,12 @@ mod tests {
             RectBounds::new(1.0, 1.0),
         ).translate(&Translation3::from(translation_vec));
 
-        //let p_yz = yz_plane(RectBounds::new(3.0, 3.0))
-        //    .rotate(&Rotation3::from_axis_angle(
-        //        &Vector3::y_axis(),
-        //        f32::consts::FRAC_PI_2,
-        //    ))
-        //    .translate(&Translation3::new(1.0, 2.0, 3.0));
-
         let p = Point3::new(-1.0, 2.0, -7.0);
 
-        //let local_p = p_yz.get_local_coords(&p);
         let local_p = pl.get_local_coords(&p);
 
         // only first two coords will be equal -> z direction is chopped off
         // going from global to local
-        println!("{:?}", pl.get_global_coords(&local_p));
         assert_relative_eq!(p.xy(), pl.get_global_coords(&local_p).xy());
 
     }
