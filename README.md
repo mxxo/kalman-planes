@@ -31,7 +31,7 @@ Plan:
 - 3D planes -> use a struct with conversion operators
 - Take bounds logic from ACTS impl
 
-Improvements:
+Future Improvements:
 - Add tolerance considerations 
 - Add unit system (currently unitless)
 - Flesh out differences between Detector and Plane Surface (?)

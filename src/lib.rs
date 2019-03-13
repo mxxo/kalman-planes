@@ -102,14 +102,14 @@ impl Plane {
     }
 
     // uses a stored matrix inverse for efficiency
-    pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
+    pub fn get_local_coords(&self, global_point: Point3<f32>) -> Point2<f32> {
         let local_point_3 = self.global_to_local * global_point;
         // chop off z entry
         local_point_3.xy()
     }
 
     // evaluates the matrix inverse each time
-    pub fn get_local_coords_eager(&self, global_point: &Point3<f32>) -> Point2<f32> {
+    pub fn get_local_coords_eager(&self, global_point: Point3<f32>) -> Point2<f32> {
         let local_point_3 = self.local_to_global.inverse() * global_point;
         local_point_3.xy()
     }
@@ -217,7 +217,7 @@ pub fn yz_plane(bounds: RectBounds) -> Plane {
 mod tests {
     // import all names from the outer scope
     use super::*;
-
+    use approx::assert_relative_eq;
     /// RectBounds tests
 
     #[test]
@@ -245,18 +245,18 @@ mod tests {
         let right_upper = Point2::new(0.1, 0.33);
 
         // inside checks
-        assert!(pl.in_bounds(&boundary_point));
-        assert!(pl.in_bounds(&origin));
-        assert!(pl.in_bounds(&left_upper));
-        assert!(pl.in_bounds(&left_lower));
-        assert!(pl.in_bounds(&right_lower));
-        assert!(pl.in_bounds(&right_upper));
+        assert!(pl.in_bounds(boundary_point));
+        assert!(pl.in_bounds(origin));
+        assert!(pl.in_bounds(left_upper));
+        assert!(pl.in_bounds(left_lower));
+        assert!(pl.in_bounds(right_lower));
+        assert!(pl.in_bounds(right_upper));
 
         // outside checks
-        assert!(!pl.in_bounds(&Point2::new(1.01, 0.0)));
-        assert!(!pl.in_bounds(&Point2::new(1.0, 1.01)));
-        assert!(!pl.in_bounds(&Point2::new(-1.01, 0.0)));
-        assert!(!pl.in_bounds(&Point2::new(0.0, -1.01)));
+        assert!(!pl.in_bounds(Point2::new(1.01, 0.0)));
+        assert!(!pl.in_bounds(Point2::new(1.0, 1.01)));
+        assert!(!pl.in_bounds(Point2::new(-1.01, 0.0)));
+        assert!(!pl.in_bounds(Point2::new(0.0, -1.01)));
     }
 
     /// Local and global coordinate systems
@@ -272,7 +272,7 @@ mod tests {
 
         // point at the origin of the plane should be at the
         // translation point
-        let converted_global = pxy.get_global_coords(&Point2::origin());
+        let converted_global = pxy.get_global_coords(Point2::origin());
         assert_relative_eq!(global_point, converted_global);
     }
 
@@ -281,13 +281,13 @@ mod tests {
     fn global_to_local() {
         let t_vec = Vector3::new(1.0, -1.0, 3.0);
 
-        let mut pxy = xy_plane(RectBounds::new(1.0, 1.0)).translate(&Translation3::from(t_vec));
+        let pxy = xy_plane(RectBounds::new(1.0, 1.0)).translate(&Translation3::from(t_vec));
 
         let global_point = Point3::from(t_vec);
 
         // point at the origin of the plane should be at the
         // translation point
-        let local_point = pxy.get_local_coords(&global_point);
+        let local_point = pxy.get_local_coords(global_point);
         assert_relative_eq!(local_point, Point2::origin());
     }
 
@@ -309,8 +309,8 @@ mod tests {
 
         // check if converted points are the same
         assert_eq!(
-            xy_pl.get_global_coords(&Point2::origin()),
-            gen_xy_pl.get_global_coords(&Point2::origin())
+            xy_pl.get_global_coords(Point2::origin()),
+            gen_xy_pl.get_global_coords(Point2::origin())
         );
 
         // --
@@ -329,8 +329,8 @@ mod tests {
 
         // check if converted points are the same
         assert_eq!(
-            zx_pl.get_global_coords(&Point2::new(1.0, 2.0)),
-            gen_zx_pl.get_global_coords(&Point2::new(1.0, 2.0))
+            zx_pl.get_global_coords(Point2::new(1.0, 2.0)),
+            gen_zx_pl.get_global_coords(Point2::new(1.0, 2.0))
         );
     }
 
@@ -399,15 +399,15 @@ mod tests {
     fn reversible_rotation() {
         // rotate the xy_plane pi/2 radians around y
         // and back to check reversibility in rotation
-        let mut p1 = xy_plane(RectBounds::new(3.0, 3.0))
-            .rotate(&Rotation3::from_axis_angle(
-                &Vector3::y_axis(),
-                f32::consts::FRAC_PI_2,
-            ))
-            .rotate(&Rotation3::from_axis_angle(
-                &Vector3::y_axis(),
-                -1.0 * f32::consts::FRAC_PI_2,
-            ));
+        let p1 = xy_plane(RectBounds::new(3.0, 3.0))
+                    .rotate(&Rotation3::from_axis_angle(
+                        &Vector3::y_axis(),
+                        f32::consts::FRAC_PI_2,
+                    ))
+                    .rotate(&Rotation3::from_axis_angle(
+                        &Vector3::y_axis(),
+                        -1.0 * f32::consts::FRAC_PI_2,
+                    ));
 
         let p2 = xy_plane(RectBounds::new(3.0, 3.0));
         // note: uses approx equal for floating point numbers!
@@ -430,11 +430,11 @@ mod tests {
 
         let p = Point3::new(-1.0, 2.0, -7.0);
 
-        let local_p = pl.get_local_coords(&p);
+        let local_p = pl.get_local_coords(p);
 
         // only first two coords will be equal -> z direction is chopped off
         // going from global to local
-        assert_relative_eq!(p.xy(), pl.get_global_coords(&local_p).xy());
+        assert_relative_eq!(p.xy(), pl.get_global_coords(local_p).xy());
     }
 
     #[test]
@@ -447,17 +447,17 @@ mod tests {
     #[test]
     fn inverse_eager() {
         // test with rotation, translation
-        let mut p_yz = yz_plane(RectBounds::new(3.0, 3.0))
-            .rotate(&Rotation3::from_axis_angle(
-                &Vector3::y_axis(),
-                f32::consts::FRAC_PI_2,
-            ))
-            .translate(&Translation3::new(1.0, 2.0, 3.0));
+        let p_yz = yz_plane(RectBounds::new(3.0, 3.0))
+                        .rotate(&Rotation3::from_axis_angle(
+                            &Vector3::y_axis(),
+                            f32::consts::FRAC_PI_2,
+                        ))
+                        .translate(&Translation3::new(1.0, 2.0, 3.0));
 
         let p = Point3::new(-1.0, -2.0, -3.0);
 
-        let p_optional = p_yz.get_local_coords(&p);
-        let p_eager = p_yz.get_local_coords_eager(&p);
+        let p_optional = p_yz.get_local_coords(p);
+        let p_eager = p_yz.get_local_coords_eager(p);
 
         assert_relative_eq!(p_optional, p_eager);
     }

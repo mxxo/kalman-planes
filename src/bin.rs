@@ -23,7 +23,7 @@ fn main() {
     let mut pxy = geo::xy_plane(RectBounds::new(1.0, 1.0));
     println!(
         "(1, 0, 1) => {:?}",
-        pxy.get_local_coords(&Point3::new(1.0, 0.0, 1.0))
+        pxy.get_local_coords(Point3::new(1.0, 0.0, 1.0))
     );
 
     //println!("xy is {:?}", pxy);
