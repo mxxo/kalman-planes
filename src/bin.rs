@@ -21,7 +21,10 @@ fn main() {
 
     // make three planes
     let mut pxy = geo::xy_plane(RectBounds::new(1.0, 1.0));
-    println!("(1, 0, 1) => {:?}", pxy.get_local_coords(&Point3::new(1.0, 0.0, 1.0)));
+    println!(
+        "(1, 0, 1) => {:?}",
+        pxy.get_local_coords(&Point3::new(1.0, 0.0, 1.0))
+    );
 
     //println!("xy is {:?}", pxy);
     let mut pxz = geo::zx_plane(RectBounds::new(1.0, 1.0));

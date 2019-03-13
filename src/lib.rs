@@ -4,9 +4,7 @@
 ///
 /// by Max Orok, March 2019
 ///
-use nalgebra::{
-    Affine3, Matrix, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector3,
-};
+use nalgebra::{Affine3, Matrix, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector3};
 
 // EPSILON value for approximate floating point equality
 use std::f32;
@@ -63,8 +61,8 @@ impl PartialEq for Plane {
                 .relative_eq(&other.normal, f32::EPSILON, f32::EPSILON)
             && self.bounds == other.bounds // no floating point check since
                                            // bounds can't be scaled in this impl
-           // don't compare transform matrices -> only compare their results
-           // && self.global_to_local == other.global_to_local
+                                           // don't compare transform matrices -> only compare their results
+                                           // && self.global_to_local == other.global_to_local
     }
 }
 
@@ -72,12 +70,21 @@ impl PartialEq for Plane {
 impl fmt::Display for Plane {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // ok methods are used to ignore write errors -> ok for this quick and dirty method
-        writeln!(f, "Centroid: ({}, {}, {})", self.centroid.x, self.centroid.y, self.centroid.z).ok();
-        writeln!(f, "Normal: ({}, {}, {})", self.normal.x, self.normal.y, self.normal.z).ok();
+        writeln!(
+            f,
+            "Centroid: ({}, {}, {})",
+            self.centroid.x, self.centroid.y, self.centroid.z
+        )
+        .ok();
+        writeln!(
+            f,
+            "Normal: ({}, {}, {})",
+            self.normal.x, self.normal.y, self.normal.z
+        )
+        .ok();
         writeln!(f, "Transform matrix: {:?}", self.global_to_local)
     }
 }
-
 
 impl Plane {
     ///// Given a local plane coordinate, check if in RectBounds
@@ -147,7 +154,6 @@ pub fn plane_surface(
     normal: Unit<Vector3<f32>>,
     bounds: RectBounds,
 ) -> Plane {
-
     // comments taken from PlaneSurface.cpp {
     // the right-handed coordinate system is defined as
     // T = normal
@@ -190,31 +196,19 @@ pub fn plane_surface(
 /// xy plane has a positive z-direction normal
 /// note: local to global transform is an identity matrix (l_x = g_x; l_y = g_y)
 pub fn xy_plane(bounds: RectBounds) -> Plane {
-    plane_surface(
-        Vector3::new(0.0, 0.0, 0.0),
-        Vector3::z_axis(),
-        bounds,
-    )
+    plane_surface(Vector3::new(0.0, 0.0, 0.0), Vector3::z_axis(), bounds)
 }
 
 /// zx plane has a positive y-direction normal
 /// note: reuse xy cstor and make a zx plane by rotation
 pub fn zx_plane(bounds: RectBounds) -> Plane {
-    plane_surface(
-        Vector3::new(0.0, 0.0, 0.0),
-        Vector3::y_axis(),
-        bounds,
-    )
+    plane_surface(Vector3::new(0.0, 0.0, 0.0), Vector3::y_axis(), bounds)
 }
 
 /// yz plane has a positive x-direction normal
 /// note: reuse xy cstor and make a yz plane by rotation
 pub fn yz_plane(bounds: RectBounds) -> Plane {
-    plane_surface(
-        Vector3::new(0.0, 0.0, 0.0),
-        Vector3::x_axis(),
-        bounds,
-    )
+    plane_surface(Vector3::new(0.0, 0.0, 0.0), Vector3::x_axis(), bounds)
 }
 
 /// Unit tests for planes
@@ -314,8 +308,10 @@ mod tests {
         assert_eq!(xy_pl, gen_xy_pl);
 
         // check if converted points are the same
-        assert_eq!(xy_pl.get_global_coords(&Point2::origin()),
-                   gen_xy_pl.get_global_coords(&Point2::origin()));
+        assert_eq!(
+            xy_pl.get_global_coords(&Point2::origin()),
+            gen_xy_pl.get_global_coords(&Point2::origin())
+        );
 
         // --
 
@@ -332,8 +328,10 @@ mod tests {
         assert_eq!(zx_pl, gen_zx_pl);
 
         // check if converted points are the same
-        assert_eq!(zx_pl.get_global_coords(&Point2::new(1.0, 2.0)),
-                   gen_zx_pl.get_global_coords(&Point2::new(1.0, 2.0)));
+        assert_eq!(
+            zx_pl.get_global_coords(&Point2::new(1.0, 2.0)),
+            gen_zx_pl.get_global_coords(&Point2::new(1.0, 2.0))
+        );
     }
 
     //#[test]
@@ -427,7 +425,8 @@ mod tests {
             translation_vec,
             Vector3::y_axis(),
             RectBounds::new(1.0, 1.0),
-        ).translate(&Translation3::from(translation_vec));
+        )
+        .translate(&Translation3::from(translation_vec));
 
         let p = Point3::new(-1.0, 2.0, -7.0);
 
@@ -436,7 +435,6 @@ mod tests {
         // only first two coords will be equal -> z direction is chopped off
         // going from global to local
         assert_relative_eq!(p.xy(), pl.get_global_coords(&local_p).xy());
-
     }
 
     #[test]
