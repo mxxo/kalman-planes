@@ -3,9 +3,9 @@
 /// name clashes.
 ///
 /// by Max Orok, March 2019
-use approx::assert_relative_eq;
+///
 use nalgebra::{
-    Affine3, Matrix, Point, Point2, Point3, Real, Rotation, Rotation3, Translation3, Unit, Vector2, Vector3,
+    Affine3, Matrix, Point2, Point3, Real, Rotation3, Translation3, Unit, Vector3,
 };
 
 // EPSILON value for approximate floating point equality
@@ -17,7 +17,7 @@ use std::fmt;
 // constant value taken from Definitions.hpp (Copyright (C) 2016-2018 Acts project team)
 // https://gitlab.cern.ch/acts/acts-core/blob/master/Core/include/Acts/Utilities/Definitions.hpp
 // used for general plane cstor `plane_surface`
-const s_curvilinearProjTolerance: f32 = 0.999995;
+const S_CURVILINEAR_PROJ_TOLERANCE: f32 = 0.999_995;
 
 /// A basic rectangular bounds structure (in local coordinates)
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -71,11 +71,13 @@ impl PartialEq for Plane {
 /// Pretty printing for Planes
 impl fmt::Display for Plane {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Centroid: ({}, {}, {})\n", self.centroid.x, self.centroid.y, self.centroid.z);
-        write!(f, "Normal: ({}, {}, {})\n", self.normal.x, self.normal.y, self.normal.z);
-        write!(f, "Transform matrix: {:?}", self.global_to_local)
+        // ok methods are used to ignore write errors -> ok for this quick and dirty method
+        writeln!(f, "Centroid: ({}, {}, {})", self.centroid.x, self.centroid.y, self.centroid.z).ok();
+        writeln!(f, "Normal: ({}, {}, {})", self.normal.x, self.normal.y, self.normal.z).ok();
+        writeln!(f, "Transform matrix: {:?}", self.global_to_local)
     }
 }
+
 
 impl Plane {
     ///// Given a local plane coordinate, check if in RectBounds
@@ -85,7 +87,7 @@ impl Plane {
     //}
 
     /// naive bounds check (add tolerances later)
-    pub fn in_bounds(&self, local_point: &Point2<f32>) -> bool {
+    pub fn in_bounds(&self, local_point: Point2<f32>) -> bool {
         local_point.x >= -1.0 * self.bounds.half_x
             && local_point.x <= self.bounds.half_x
             && local_point.y >= -1.0 * self.bounds.half_y
@@ -94,18 +96,18 @@ impl Plane {
 
     // uses a stored matrix inverse for efficiency
     pub fn get_local_coords(&self, global_point: &Point3<f32>) -> Point2<f32> {
-        let local_point3D = self.global_to_local * global_point;
+        let local_point_3 = self.global_to_local * global_point;
         // chop off z entry
-        local_point3D.xy()
+        local_point_3.xy()
     }
 
     // evaluates the matrix inverse each time
     pub fn get_local_coords_eager(&self, global_point: &Point3<f32>) -> Point2<f32> {
-        let local_point_3D = self.local_to_global.inverse() * global_point;
-        local_point_3D.xy()
+        let local_point_3 = self.local_to_global.inverse() * global_point;
+        local_point_3.xy()
     }
 
-    pub fn get_global_coords(&self, local_point: &Point2<f32>) -> Point3<f32> {
+    pub fn get_global_coords(&self, local_point: Point2<f32>) -> Point3<f32> {
         self.local_to_global * Point3::new(local_point.x, local_point.y, 0.0)
     }
 
@@ -146,16 +148,16 @@ pub fn plane_surface(
     bounds: RectBounds,
 ) -> Plane {
 
-    // comments taken from PlaneSurface.cpp
-    /// the right-handed coordinate system is defined as
-    /// T = normal
-    /// U = Z x T if T not parallel to Z otherwise U = X x T
-    /// V = T x U
+    // comments taken from PlaneSurface.cpp {
+    // the right-handed coordinate system is defined as
+    // T = normal
+    // U = Z x T if T not parallel to Z otherwise U = X x T
+    // V = T x U
+    // }
     // unwrap from Unit
+    let t_vec = normal.into_inner();
 
-    let T = normal.into_inner();
-
-    let U = if Real::abs(normal.dot(&Vector3::z_axis())) < s_curvilinearProjTolerance {
+    let u_vec = if Real::abs(normal.dot(&Vector3::z_axis())) < S_CURVILINEAR_PROJ_TOLERANCE {
         Vector3::z_axis().cross(&normal).normalize()
     } else {
         Vector3::x_axis().cross(&normal).normalize()
@@ -163,21 +165,14 @@ pub fn plane_surface(
 
     // TODO check if no normalization step needed here?
     // might be that normal cross product components ensure the result is normalized
-    let V = normal.cross(&U);
+    let v_vec = normal.cross(&u_vec);
 
     // make rotation matrix from T (normal), U, V
-
-    let matrix3 = Matrix::from_columns(&[U, V, T]);
+    let matrix3 = Matrix::from_columns(&[u_vec, v_vec, t_vec]);
 
     let curvilinear_rotation: Rotation3<f32> =
         //Rotation::from_matrix_unchecked(matrix3);
         Rotation3::from_matrix(&matrix3);
-
-    println!("T Vec is : {:?}\n", &T);
-    println!("U Vec is : {:?}\n", &U);
-    println!("V Vec is : {:?}\n", &V);
-    println!("Matrix3 is : {:?}\n", &matrix3);
-    println!("rotation matrix: {:?}\n", curvilinear_rotation);
 
     Plane {
         centroid: Point3::origin(),
